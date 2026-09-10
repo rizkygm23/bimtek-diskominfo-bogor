@@ -9,12 +9,16 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Hapus duplikat yang mungkin ada sebelum menambahkan constraint
-        // (ambil ID terkecil per pasangan event_id+user_id, hapus sisanya)
+        // Hapus duplikat yang mungkin ada sebelum menambahkan constraint.
+        // MySQL error 1093: tidak boleh SELECT dan DELETE dari tabel yang sama
+        // dalam satu query. Solusi: bungkus subquery dalam SELECT tambahan
+        // (derived table) supaya MySQL mematerialkan hasilnya dulu.
         DB::statement("
             DELETE FROM attendances
             WHERE id NOT IN (
-                SELECT MIN(id) FROM attendances GROUP BY event_id, user_id
+                SELECT id FROM (
+                    SELECT MIN(id) AS id FROM attendances GROUP BY event_id, user_id
+                ) AS keep_ids
             )
         ");
 
