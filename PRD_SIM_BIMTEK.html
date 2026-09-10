@@ -1,0 +1,553 @@
+<title>PRD SIM-BIMTEK Diskominfo</title>
+<style>
+  :root{
+    --bg:#FAF7F0; --surface:#FFFFFF; --surface-2:#F3EEE2;
+    --ink:#0F172A; --ink-2:#334155; --muted:#6B6357;
+    --navy:#1E3A8A; --navy-soft:#E7EBF6;
+    --gold:#A8842C; --gold-soft:#F3E9CE;
+    --green:#047857; --green-soft:#D7EEE3;
+    --amber:#B45309; --amber-soft:#FBEDD6;
+    --border:#E0D9CC; --rule:#D9D2C2;
+    --shadow:0 1px 2px rgba(15,23,42,.04), 0 8px 24px rgba(15,23,42,.06);
+    --font-display:"Spectral",Georgia,"Times New Roman",serif;
+    --font-body:"Plus Jakarta Sans",system-ui,-apple-system,sans-serif;
+    --font-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#0F172A; --surface:#1A2540; --surface-2:#16203A;
+      --ink:#ECE6D7; --ink-2:#B9B3A3; --muted:#8B94A8;
+      --navy:#6E8BF5; --navy-soft:#1E2C4E;
+      --gold:#D4A847; --gold-soft:#2A2418;
+      --green:#10B981; --green-soft:#0F2E26;
+      --amber:#F0B860; --amber-soft:#3A2A12;
+      --border:#28365A; --rule:#243154;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0F172A; --surface:#1A2540; --surface-2:#16203A;
+    --ink:#ECE6D7; --ink-2:#B9B3A3; --muted:#8B94A8;
+    --navy:#6E8BF5; --navy-soft:#1E2C4E;
+    --gold:#D4A847; --gold-soft:#2A2418;
+    --green:#10B981; --green-soft:#0F2E26;
+    --amber:#F0B860; --amber-soft:#3A2A12;
+    --border:#28365A; --rule:#243154;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+  }
+
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:var(--font-body); font-size:16px; line-height:1.65;
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  }
+  a{color:var(--navy); text-decoration:none}
+  a:hover{text-decoration:underline}
+
+  /* ---- Kop surat header band ---- */
+  .kop{
+    background:linear-gradient(180deg, #15296b 0%, var(--navy) 100%);
+    color:#fff; padding:34px 20px 30px; border-bottom:4px solid var(--gold);
+    position:relative;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .kop{background:linear-gradient(180deg,#0B1530 0%,#16265a 100%)}}
+  :root[data-theme="dark"] .kop{background:linear-gradient(180deg,#0B1530 0%,#16265a 100%)}
+  .kop-inner{max-width:860px; margin:0 auto; display:flex; gap:18px; align-items:center}
+  .emblem{
+    flex:0 0 auto; width:54px; height:54px; border-radius:50%;
+    border:2px solid var(--gold); display:grid; place-items:center;
+    font-family:var(--font-display); font-weight:700; color:var(--gold);
+    background:rgba(255,255,255,.05); letter-spacing:.5px;
+  }
+  .kop-meta{flex:1; min-width:0}
+  .kop-inst{font-family:var(--font-display); font-weight:700; font-size:15px; letter-spacing:.3px; color:#cfe0ff}
+  .kop-sub{font-size:12.5px; color:#9fb4e8; margin-top:2px}
+  .kop-title{font-family:var(--font-display); font-weight:700; font-size:30px; line-height:1.1; margin:14px 0 6px; text-wrap:balance}
+  .kop-title em{font-style:normal; color:var(--gold)}
+  .kop-lead{font-size:14.5px; color:#dbe5ff; max-width:60ch}
+  .kop-tags{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px}
+  .kop-tag{font-size:11.5px; font-weight:600; padding:4px 10px; border-radius:999px; background:rgba(255,255,255,.1); color:#e6ecff; border:1px solid rgba(255,255,255,.14)}
+  .kop-tag.gold{background:rgba(212,168,71,.16); color:var(--gold); border-color:rgba(212,168,71,.35)}
+
+  /* ---- theme toggle ---- */
+  .toggle{
+    position:fixed; top:14px; right:14px; z-index:50;
+    background:var(--surface); border:1px solid var(--border); color:var(--ink);
+    width:38px; height:38px; border-radius:10px; cursor:pointer; font-size:16px;
+    display:grid; place-items:center; box-shadow:var(--shadow);
+  }
+  .toggle:hover{border-color:var(--gold)}
+
+  /* ---- layout: sidebar TOC + content ---- */
+  .shell{max-width:1140px; margin:0 auto; padding:0 20px; display:grid; grid-template-columns:1fr; gap:0}
+  @media (min-width:1024px){
+    .shell{grid-template-columns:232px 1fr; gap:40px; padding-top:36px}
+    .toc{position:sticky; top:24px; align-self:start; max-height:calc(100vh - 48px); overflow:auto}
+    .toc-foot{display:block}
+  }
+  .toc-foot{display:none}
+  .toc-label{font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin:0 0 12px}
+  .toc ol{list-style:none; margin:0; padding:0; border-left:1.5px solid var(--border)}
+  .toc li{margin:0}
+  .toc a{display:block; padding:6px 0 6px 14px; font-size:13.5px; color:var(--ink-2); border-left:2px solid transparent; margin-left:-1.5px; line-height:1.35}
+  .toc a:hover{color:var(--navy); text-decoration:none; background:var(--navy-soft)}
+  .toc a.active{color:var(--navy); border-left-color:var(--gold); font-weight:600}
+
+  main{min-width:0; padding-bottom:80px}
+  @media (max-width:1023px){main{padding-top:30px}}
+
+  section{margin-bottom:46px; scroll-margin-top:24px}
+  .eyebrow{font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--gold); margin:0 0 8px}
+  h2{font-family:var(--font-display); font-weight:700; font-size:27px; line-height:1.15; margin:0 0 14px; text-wrap:balance; color:var(--ink); border-bottom:1px solid var(--rule); padding-bottom:12px}
+  h3{font-family:var(--font-body); font-weight:700; font-size:17px; margin:26px 0 10px; color:var(--ink); text-wrap:balance}
+  h4{font-family:var(--font-body); font-weight:600; font-size:14.5px; margin:18px 0 8px; color:var(--ink-2)}
+  p{margin:0 0 13px; color:var(--ink-2)}
+  p.lede{font-size:17px; color:var(--ink); line-height:1.6}
+  ul,ol{margin:0 0 14px; padding-left:20px; color:var(--ink-2)}
+  li{margin:0 0 6px}
+  li::marker{color:var(--gold)}
+  strong{color:var(--ink); font-weight:600}
+  code{font-family:var(--font-mono); font-size:.86em; background:var(--surface-2); padding:1.5px 6px; border-radius:5px; color:var(--ink)}
+  .route{font-family:var(--font-mono); font-size:12.5px; color:var(--navy); background:var(--navy-soft); padding:2px 7px; border-radius:5px; white-space:nowrap}
+
+  /* ---- tiles ---- */
+  .tiles{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin:18px 0 6px}
+  .tile{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px 16px 14px; box-shadow:var(--shadow)}
+  .tile .n{font-family:var(--font-display); font-weight:700; font-size:26px; color:var(--navy); line-height:1; font-variant-numeric:tabular-nums}
+  .tile .l{font-size:12px; color:var(--muted); margin-top:7px; line-height:1.35}
+  .tile.gold .n{color:var(--gold)}
+
+  /* ---- callout ---- */
+  .callout{background:var(--navy-soft); border-left:3px solid var(--navy); border-radius:0 10px 10px 0; padding:14px 18px; margin:18px 0}
+  .callout p{margin:0; color:var(--ink)}
+  .callout.gold{background:var(--gold-soft); border-left-color:var(--gold)}
+
+  /* ---- table ---- */
+  .tbl-wrap{overflow-x:auto; margin:16px 0 4px; border:1px solid var(--border); border-radius:10px}
+  table{border-collapse:collapse; width:100%; font-size:13.5px; min-width:560px}
+  th,td{text-align:left; padding:10px 14px; border-bottom:1px solid var(--border); vertical-align:top}
+  thead th{background:var(--surface-2); font-weight:700; color:var(--ink); font-size:12px; letter-spacing:.02em; border-bottom:2px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:0}
+  td.center,th.center{text-align:center}
+  .pill{display:inline-block; font-size:11px; font-weight:700; padding:2px 9px; border-radius:999px; white-space:nowrap}
+  .pill.yes{background:var(--green-soft); color:var(--green)}
+  .pill.no{background:var(--surface-2); color:var(--muted)}
+  .pill.own{background:var(--amber-soft); color:var(--amber)}
+
+  /* ---- module list ---- */
+  .mod{display:grid; grid-template-columns:34px 1fr; gap:14px; padding:18px 0; border-bottom:1px solid var(--rule)}
+  .mod:last-child{border-bottom:0}
+  .mod .num{font-family:var(--font-display); font-weight:700; font-size:19px; color:var(--gold); line-height:1.2; font-variant-numeric:tabular-nums}
+  .mod h3{margin:0 0 6px}
+  .mod p{margin:0 0 8px; font-size:14.5px}
+  .mod .eps{display:flex; flex-wrap:wrap; gap:6px 10px; margin-top:6px}
+
+  /* ---- flow steps ---- */
+  .flow{display:grid; gap:0; margin:16px 0}
+  .step{display:grid; grid-template-columns:28px 1fr; gap:14px; padding:14px 0; border-left:2px solid var(--border); padding-left:18px; position:relative}
+  .step::before{content:""; position:absolute; left:-7px; top:20px; width:12px; height:12px; border-radius:50%; background:var(--gold); border:2px solid var(--bg)}
+  .step .stt{font-weight:700; color:var(--navy); font-size:14px; margin:0 0 4px}
+  .step p{margin:0; font-size:14px}
+
+  /* ---- entity cards ---- */
+  .entities{display:grid; gap:12px; margin:16px 0}
+  .ent{background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px 16px}
+  .ent h4{margin:0 0 8px; font-family:var(--font-mono); font-size:13.5px; color:var(--navy)}
+  .ent .rel{font-size:13px; color:var(--ink-2); line-height:1.5}
+  .ent .rel b{color:var(--gold); font-weight:600}
+
+  /* ---- demo accounts ---- */
+  .demo{display:grid; grid-template-columns:1fr; gap:10px; margin:14px 0}
+  @media (min-width:560px){.demo{grid-template-columns:repeat(3,1fr)}}
+  .acct{background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px}
+  .acct .r{font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--gold)}
+  .acct .em{font-family:var(--font-mono); font-size:12.5px; color:var(--ink); margin:6px 0 2px; word-break:break-all}
+  .acct .pw{font-size:12px; color:var(--muted)}
+  .acct .pw b{color:var(--ink-2)}
+
+  hr.thin{border:0; border-top:1px solid var(--rule); margin:30px 0}
+
+  .footnote{font-size:12.5px; color:var(--muted); margin-top:24px; padding-top:16px; border-top:1px solid var(--rule)}
+  .footnote p{margin:0 0 6px; color:var(--muted)}
+</style>
+
+<button class="toggle" id="themetoggle" title="Ganti tema terang/gelap" aria-label="Ganti tema">🌒</button>
+
+<header class="kop">
+  <div class="kop-inner">
+    <div class="emblem">DI</div>
+    <div class="kop-meta">
+      <div class="kop-inst">PEMERINTAH KABUPATEN BOGOR</div>
+      <div class="kop-sub">Dinas Komunikasi dan Informatika · Bidang Aplikasi Informatika (APTIKA)</div>
+      <h1 class="kop-title">Dokumen <em>PRD</em> — SIM-BIMTEK</h1>
+      <p class="kop-lead">Product Requirements Document untuk Sistem Informasi Manajemen Bimbingan Teknis Kabupaten Bogor. Ringkasan tujuan, peran pengguna, arsitektur, modul fungsional, alur kerja, dan model data — disusun agar mudah dipahami tim.</p>
+      <div class="kop-tags">
+        <span class="kop-tag gold">v1.0</span>
+        <span class="kop-tag">Laravel 11 · Inertia · React 19</span>
+        <span class="kop-tag">Diperbarui: Sep 2026</span>
+        <span class="kop-tag">Status: Aktif / Demo</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+
+  <aside class="toc" aria-label="Daftar isi">
+    <p class="toc-label">Daftar Isi</p>
+    <ol>
+      <li><a href="#ringkasan">Ringkasan Eksekutif</a></li>
+      <li><a href="#fakta">Fakta Singkat</a></li>
+      <li><a href="#latar">Latar Belakang & Tujuan</a></li>
+      <li><a href="#peran">Peran Pengguna</a></li>
+      <li><a href="#arsitektur">Arsitektur Teknologi</a></li>
+      <li><a href="#modul">Modul Fungsional</a></li>
+      <li><a href="#alur">Alur Kerja Utama</a></li>
+      <li><a href="#data">Struktur Data</a></li>
+      <li><a href="#fitur">Fitur Andalan</a></li>
+      <li><a href="#status">Status & Akses Demo</a></li>
+      <li><a href="#penutup">Penutup</a></li>
+    </ol>
+    <div class="toc-foot" style="margin-top:22px; padding-top:16px; border-top:1px solid var(--border)">
+      <p style="font-size:12px; color:var(--muted); margin:0">Dokumen referensi internal. Hubungi tim APTIKA untuk akses kode sumber.</p>
+    </div>
+  </aside>
+
+  <main>
+
+    <section id="ringkasan">
+      <p class="eyebrow">01 — Ringkasan</p>
+      <h2>Ringkasan Eksekutif</h2>
+      <p class="lede"><strong>SIM-BIMTEK</strong> adalah Sistem Informasi Manajemen Bimbingan Teknis yang dibangun untuk Dinas Komunikasi dan Informatika (Diskominfo) Kabupaten Bogor. Sistem ini mengelola siklus hidup penuh sebuah kegiatan bimbingan teknis kedinasan — dari katalog &amp; pendaftaran event, registrasi peserta dan narasumber, presensi hari-H berbasis QR dinamis, verifikasi berkas identitas, perhitungan honorarium dengan pemotongan PPh 21 otomatis, hingga penerbitan dan pengarsipan sertifikat.</p>
+      <p>Dibangun di atas <strong>Laravel 11 + Inertia.js + React</strong>, sistem memisahkan tiga peran pengguna — <strong>Administrator</strong>, <strong>Peserta</strong> (ASN/Umum), dan <strong>Narasumber/Pakar</strong> — dengan dashboard, navigasi, dan alur kerja yang berbeda untuk masing-masing. Seluruh antarmuka berbahasa Indonesia dan mengikuti konvensi dokumen kedinasan (kop surat, berita acara, format pemerintahan).</p>
+      <div class="callout">
+        <p>Satu portal untuk seluruh siklus bimtek: <strong>katalog → daftar → tiket QR → presensi hari-H → verifikasi berkas → honorarium + pajak → sertifikat → laporan</strong>. Tidak lagi tersebar di spreadsheet dan dokumen manual.</p>
+      </div>
+    </section>
+
+    <section id="fakta">
+      <p class="eyebrow">02 — Fakta Singkat</p>
+      <h2>Fakta Singkat</h2>
+      <div class="tiles">
+        <div class="tile"><div class="n">3</div><div class="l">Peran pengguna terisolasi (Admin, Peserta, Narasumber)</div></div>
+        <div class="tile gold"><div class="n">16</div><div class="l">Model data Eloquent</div></div>
+        <div class="tile"><div class="n">14</div><div class="l">Controller logika bisnis</div></div>
+        <div class="tile gold"><div class="n">18</div><div class="l">File migrasi database</div></div>
+        <div class="tile"><div class="n">~30</div><div class="l">Halaman React (Inertia)</div></div>
+        <div class="tile gold"><div class="n">11</div><div class="l">Modul fungsional utama</div></div>
+      </div>
+      <p style="font-size:13px; color:var(--muted); margin-top:14px">Angka diambil langsung dari struktur kode proyek per Sep 2026.</p>
+    </section>
+
+    <section id="latar">
+      <p class="eyebrow">03 — Konteks</p>
+      <h2>Latar Belakang &amp; Tujuan</h2>
+      <p>Kegiatan bimbingan teknis (bimtek) merupakan instrumen peningkatan kapasitas SDM aparatur Pemerintah Kabupaten Bogor. Sebelumnya, pengelolaan bimtek — pendaftaran, presensi, honorarium narasumber beserta pajak penghasilan, hingga sertifikat — tersebar di berkas manual dan lembar kerja terpisah, rawan kesalahan dan sulut diaudit.</p>
+      <p>SIM-BIMTEK menyatukan kebutuhan tersebut dalam satu portal kedinasan yang:</p>
+      <ul>
+        <li><strong>Transparan &amp; auditable</strong> — log aktivitas tak terhapus (<code>ActivityLog</code>) dan alur verifikasi berkas identitas.</li>
+        <li><strong>Akurat perpajakan</strong> — perhitungan PPh 21 otomatis berbasis golongan ASN (IV = 15%, III = 5%, Non-ASN = 2,5%).</li>
+        <li><strong>Efisien di lapangan</strong> — presensi hari-H dengan QR dinamis anti-fraud dan pemindai kamera HP.</li>
+        <li><strong>Standar dokumen</strong> — kop surat, berita acara, dan ekspor format pemerintahan yang dapat disesuaikan.</li>
+      </ul>
+    </section>
+
+    <section id="peran">
+      <p class="eyebrow">04 — Pengguna</p>
+      <h2>Peran Pengguna</h2>
+      <p>Sistem mengenali tiga peran dengan dashboard dan hak akses yang berbeda. Login mendukung email maupun NIP/NIK (dengan normalisasi pemisah). Kontrol akses dijalankan oleh <code>AdminMiddleware</code> yang memeriksa <code>role === 'admin'</code>.</p>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>Kemampuan</th><th class="center">Admin</th><th class="center">Peserta</th><th class="center">Narasumber</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Katalog &amp; detail event</td><td class="center"><span class="pill yes">Penuh</span></td><td class="center"><span class="pill own">Lihat</span></td><td class="center"><span class="pill own">Lihat</span></td></tr>
+            <tr><td>CRUD event &amp; form builder</td><td class="center"><span class="pill yes">Ya</span></td><td class="center"><span class="pill no">—</span></td><td class="center"><span class="pill no">—</span></td></tr>
+            <tr><td>Pendaftaran event</td><td class="center"><span class="pill yes">Kelola</span></td><td class="center"><span class="pill own">NIK + Bank + Dinamis</span></td><td class="center"><span class="pill own">Materi + KTP + NPWP + PPh</span></td></tr>
+            <tr><td>Presensi QR</td><td class="center"><span class="pill yes">Generator + Manual</span></td><td class="center"><span class="pill own">Scan / 1-klik</span></td><td class="center"><span class="pill own">Scan / 1-klik</span></td></tr>
+            <tr><td>Tiket digital &amp; QR</td><td class="center"><span class="pill yes">Lihat semua</span></td><td class="center"><span class="pill own">Tiket sendiri</span></td><td class="center"><span class="pill no">—</span></td></tr>
+            <tr><td>Materi presentasi</td><td class="center"><span class="pill yes">Kelola</span></td><td class="center"><span class="pill own">Unduh</span></td><td class="center"><span class="pill own">Unggah/Hapus</span></td></tr>
+            <tr><td>Sertifikat</td><td class="center"><span class="pill yes">Bulk + Auto-match</span></td><td class="center"><span class="pill own">Unduh sendiri</span></td><td class="center"><span class="pill own">Unduh sendiri</span></td></tr>
+            <tr><td>Honorarium &amp; PPh 21</td><td class="center"><span class="pill yes">Hitung + Status</span></td><td class="center"><span class="pill no">—</span></td><td class="center"><span class="pill own">Lihat profil</span></td></tr>
+            <tr><td>Verifikasi identitas</td><td class="center"><span class="pill yes">Setujui/Tolak</span></td><td class="center"><span class="pill own">Lihat KTP/NPWP sendiri</span></td><td class="center"><span class="pill own">Lihat KTP/NPWP sendiri</span></td></tr>
+            <tr><td>Laporan &amp; ekspor</td><td class="center"><span class="pill yes">Ekspor CSV</span></td><td class="center"><span class="pill own">Riwayat</span></td><td class="center"><span class="pill own">Laporan sendiri</span></td></tr>
+            <tr><td>Real-time monitoring (SSE)</td><td class="center"><span class="pill yes">Stream + Poll</span></td><td class="center"><span class="pill no">—</span></td><td class="center"><span class="pill no">—</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="arsitektur">
+      <p class="eyebrow">05 — Teknologi</p>
+      <h2>Arsitektur Teknologi</h2>
+      <p>Arsitektur monolitik modern: satu aplikasi Laravel sebagai sumber tunggal kebenaran, dengan React dirender lewat Inertia.js sebagai SPA — tanpa API terpisah.</p>
+      <ul>
+        <li><strong>Backend</strong> — Laravel 11 (PHP 8.2), Eloquent ORM, antrian &amp; cache berbasis database, otentikasi sesi.</li>
+        <li><strong>Database</strong> — SQLite (default, file <code>database/database.sqlite</code>) atau MySQL/MariaDB via PDO.</li>
+        <li><strong>Frontend</strong> — React 19 lewat Inertia.js, Tailwind CSS 3.4, dibangun dengan Vite 5.</li>
+        <li><strong>Pustaka kunci</strong> — <code>html5-qrcode</code> (pemindai kamera), <code>qrcode.react</code> (generate QR), <code>html2pdf.js</code> (PDF sisi klien), <code>lucide-react</code> (ikon).</li>
+        <li><strong>Real-time</strong> — Server-Sent Events (SSE) + <em>ring buffer</em> di cache (<code>RealtimeStreamService</code>), bukan WebSocket.</li>
+        <li><strong>Penyimpanan berkas</strong> — disk publik untuk avatar/materi; disk lokal terproteksi (<code>storage/app/local/documents</code>) untuk KTP &amp; NPWP, diakses lewat <em>stream</em> terverifikasi.</li>
+        <li><strong>Deployment</strong> — Docker (<code>php:8.2-cli</code>, port 8080) atau <code>php artisan serve</code> multi-worker (akses HP via jaringan Wi-Fi LAN).</li>
+      </ul>
+      <div class="callout gold">
+        <p><strong>Pilihan desain:</strong> SSE + <em>ring buffer</em> cache dipilih ketimbang WebSocket agar ringan dan cocok dengan server PHP single-threaded — <em>stream</em> ditutup segera setelah <em>flush</em> untuk mencegah kelaparan thread.</p>
+      </div>
+    </section>
+
+    <section id="modul">
+      <p class="eyebrow">06 — Modul</p>
+      <h2>Modul Fungsional</h2>
+      <p>Sebelas modul fungsional menyusun sistem. Setiap modul di bawah dipetakan ke controller dan rute utamanya.</p>
+
+      <div class="mod">
+        <div class="num">1</div>
+        <div>
+          <h3>Landing &amp; Katalog Event</h3>
+          <p>Portal publik memajang bimtek terbaru (6 event terakhir dengan jumlah pendaftar), katalog lengkap dengan filter, dan detail event berisi rundown, narasumber, serta unduhan materi.</p>
+          <div class="eps"><span class="route">GET /</span><span class="route">GET /events</span><span class="route">GET /events/{id}</span></div>
+        </div>
+      </div>
+
+      <div class="mod">
+        <div class="num">2</div>
+        <div>
+          <h3>Otentikasi &amp; Pendaftaran Akun</h3>
+          <p>Login fleksibel via email atau NIP/NIK (dengan normalisasi regex). Alur pendaftaran terpisah untuk Peserta dan Narasumber — termasuk email narasumber otomatis berdomain <code>@narasumber.bogorkab.go.id</code>. Tombol <em>Quick Switch</em> (khusus admin) untuk berpindah peran saat pengujian.</p>
+          <div class="eps"><span class="route">POST /login</span><span class="route">GET /register/peserta</span><span class="route">GET /register/pembicara</span></div>
+        </div>
+      </div>
+
+      <div class="mod">
+        <div class="num">3</div>
+        <div>
+          <h3>Dashboard Terisolasi per Peran</h3>
+          <p>Admin melihat statistik agregat (total event, peserta, pendaftaran, presensi hari ini, honor) + metrik real-time. Peserta melihat pendaftaran &amp; tiket. Narasumber melihat jadwal mengajar.</p>
+          <div class="eps"><span class="route">GET /dashboard</span></div>
+        </div>
+      </div>
+
+      <div class="mod">
+        <div class="num">4</div>
+        <div>
+          <h3>CRUD Event &amp; Form Builder Dinamis</h3>
+          <p>Admin membuat/mengedit/menghapus event bimtek dengan <em>slug</em> otomatis. Form Builder memungkinkan field kustom per event (text, number, select, radio, checkbox, file, date) dengan urutan yang dapat diseret.</p>
+          <div class="eps"><span class="route">POST /admin/events/store</span><span class="route">GET /admin/events/{id}/form-builder</span><span class="route">POST /admin/events/{id}/reorder-fields</span></div>
+        </div>
+      </div>
+
+      <div class="mod">
+        <div class="num">5</div>
+        <div>
+          <h3>Pendaftaran Event Terisolasi per Peran</h3>
+          <p>Peserta mengisi NIK, rekening bank (BJB), dan menjawab field dinamis + unggah surat tugas; menghasilkan kode unik <code>BMK-YYYY-XXXXXX</code>. Narasumber mengunggah KTP, NPWP, salinan rekening, dan bahan materi; pajak PPh dihitung per golongan.</p>
+          <div class="eps"><span class="route">POST /events/{id}/register</span><span class="route">GET /registrations/{id}/ticket</span></div>
+        </div>
+      </div>
+
+      <div class="mod">
+        <div class="num">6</div>
+        <div>
+          <h3>Presensi QR Dinamis Hari-H</h3>
+          <p>Admin menampilkan QR proyektor yang berotasi (token HMAC-SHA256, default 10 menit). Peserta/narasumber memindai dengan kamera HP (<code>html5-qrcode</code>) atau verifikasi 1-klik. <em>Gatekeeper</em> memeriksa kelengkapan profil sebelum absen. Admin dapat <em>check-in</em> manual sebagai cadangan.</p>
+          <div class="eps"><span class="route">GET /admin/events/{id}/qr-event</span><span class="route">POST /attendance/check-in</span><span class="route">POST /admin/attendance/manual</span></div>
+        </div>
+      </div>
+
+      <div class="mod">
+        <div class="num">7</div>
+        <div>
+          <h3>Verifikasi Berkas Identitas</h3>
+          <p>Antrean verifikasi admin untuk profil peserta &amp; narasumber: KTP, NPWP, dan rekening bank. Status berpindah antara <code>belum_diverifikasi</code> → <code>terverifikasi</code> / <code>perlu_perbaikan</code>, dengan catatan dan log audit tak terhapus.</p>
+          <div class="eps"><span class="route">GET /admin/verifications</span><span class="route">POST /admin/verifications/{id}/status</span></div>
+        </div>
+      </div>
+
+      <div class="mod">
+        <div class="num">8</div>
+        <div>
+          <h3>Honorarium &amp; PPh 21</h3>
+          <p>Perhitungan bruto, pemotongan pajak, dan neto untuk honorarium, uang jalan narasumber, dan transport peserta. Detail bank otomatis diambil dari profil penerima. Parameter tarif pajak dapat dikonfigurasi per kategori. Status pembayaran: <code>pending → verified → processed → paid</code>.</p>
+          <div class="eps"><span class="route">GET /admin/payments</span><span class="route">POST /admin/payments/store</span><span class="route">GET /admin/tax-settings</span></div>
+        </div>
+      </div>
+
+      <div class="mod">
+        <div class="num">9</div>
+        <div>
+          <h3>Repository Sertifikat</h3>
+          <p>Manajemen sertifikat gaya Google Drive per event. Unggah massal arsip ZIP atau banyak file PDF/gambar, dengan pencocokan otomatis ke penerima berdasarkan NIK, kode registrasi, atau nama. Unduh semua sertifikat satu event sebagai ZIP. Peserta/narasumber mengunduh sertifikat mereka sendiri.</p>
+          <div class="eps"><span class="route">POST /admin/certificates/bulk-upload</span><span class="route">GET /admin/certificates/event/{id}/download-all</span><span class="route">GET /my-certificates</span></div>
+        </div>
+      </div>
+
+      <div class="mod">
+        <div class="num">10</div>
+        <div>
+          <h3>Report Center &amp; Riwayat Event</h3>
+          <p>Pembangkit laporan resmi (Berita Acara Presensi, kertas honorarium) dengan editor WYSIWYG untuk kop surat, pejabat penanda tangan, dan kode program. Ekspor CSV standar pemerintahan. Impor kehadiran massal via Excel/CSV (deteksi pemisah fleksibel) untuk event lampau.</p>
+          <div class="eps"><span class="route">GET /admin/report-center</span><span class="route">GET /admin/reports/attendance/excel</span><span class="route">POST /admin/events/{id}/import-attendance</span></div>
+        </div>
+      </div>
+
+      <div class="mod">
+        <div class="num">11</div>
+        <div>
+          <h3>Streaming Real-time &amp; Dokumen Privat</h3>
+          <p>Endpoint SSE + polling untuk metrik <em>live</em> dashboard admin dan <em>toast</em> pendaftaran/presensi. <em>Stream</em> berkas privat (KTP/NPWP) dari disk terproteksi, hanya untuk admin atau pemilik berkas.</p>
+          <div class="eps"><span class="route">GET /admin/realtime-stream</span><span class="route">GET /admin/realtime-poll</span><span class="route">GET /documents/stream</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="alur">
+      <p class="eyebrow">07 — Alur</p>
+      <h2>Alur Kerja Utama</h2>
+
+      <h3>A. Pendaftaran Peserta → Tiket QR</h3>
+      <div class="flow">
+        <div class="step"><div><div class="stt">Pilih event dari katalog</div><p>Peserta membuka detail bimtek dan menekan daftar.</p></div></div>
+        <div class="step"><div><div class="stt">Isi data &amp; field dinamis</div><p>NIK, rekening BJB, jawaban field kustom, unggah surat tugas.</p></div></div>
+        <div class="step"><div><div class="stt">Sistem terbitkan kode unik</div><p>Kode <code>BMK-YYYY-XXXXXX</code> dibuat, status <code>approved</code>, siaran real-time <code>ParticipantRegistered</code>.</p></div></div>
+        <div class="step"><div><div class="stt">Tiket digital dengan QR</div><p>Halaman tiket menampilkan QR (<code>qrcode.react</code>) sebagai pas masuk hari-H.</p></div></div>
+      </div>
+
+      <h3>B. Presensi Hari-H (QR Dinamis)</h3>
+      <div class="flow">
+        <div class="step"><div><div class="stt">Admin buka layar QR proyektor</div><p>Token HMAC-SHA256 dihasilkan, berotasi tiap 10 menit (default).</p></div></div>
+        <div class="step"><div><div class="stt">Gatekeeper periksa kelengkapan</div><p>Sebelum absen, profil (NIK/bank/rekening) harus lengkap sesuai peran.</p></div></div>
+        <div class="step"><div><div class="stt">Pindai kamera HP / 1-klik</div><p><code>html5-qrcode</code> dekode token; sistem verifikasi &amp; cegah absen ganda.</p></div></div>
+        <div class="step"><div><div class="stt">Catat &amp; siarkan</div><p>Record <code>Attendance</code> ditulis, siaran real-time <code>AttendanceRecorded</code> memperbarui dashboard admin.</p></div></div>
+      </div>
+
+      <h3>C. Honorarium &amp; PPh 21</h3>
+      <div class="flow">
+        <div class="step"><div><div class="stt">Admin input komponen</div><p>Jenis (honorarium/uang jalan/transport), volume, tarif satuan.</p></div></div>
+        <div class="step"><div><div class="stt">Sistem hitung otomatis</div><p>Bruto, tarif PPh 21 per golongan, nominal pajak, dan neto — detail bank diambil dari profil.</p></div></div>
+        <div class="step"><div><div class="stt">Alur status pembayaran</div><p><code>pending → verified → processed → paid</code>, tanggal bayar dicatat, log aktivitas tertulis.</p></div></div>
+      </div>
+
+      <h3>D. Pengarsipan Sertifikat (Bulk Auto-Match)</h3>
+      <div class="flow">
+        <div class="step"><div><div class="stt">Unggah ZIP / banyak file</div><p>Admin unggah arsip berisi ratusan sertifikat PDF/gambar per event.</p></div></div>
+        <div class="step"><div><div class="stt">Auto-match heuristik</div><p>Pencocokan ke penerima via NIK, kode registrasi, nama lengkap, atau token kata dalam nama file.</p></div></div>
+        <div class="step"><div><div class="stt">Tautkan &amp; arsipkan</div><p>File tertaut ke <code>EventRegistration</code>/<code>EventSpeaker</code>; peserta dapat mengunduh dari "Sertifikat Saya".</p></div></div>
+      </div>
+    </section>
+
+    <section id="data">
+      <p class="eyebrow">08 — Data</p>
+      <h2>Struktur Data</h2>
+      <p>Enam belas model Eloquent dengan relasi berikut. Inti tata kelola berputar di sekitar <code>User</code>, <code>BimtekEvent</code>, <code>EventRegistration</code>, dan <code>EventSpeaker</code>.</p>
+
+      <div class="entities">
+        <div class="ent"><h4>User</h4><div class="rel">Peran <b>admin / peserta / pembicara</b>. Memiliki <b>1:1</b> ParticipantProfile, SpeakerProfile, dan Speaker; <b>1:N</b> EventRegistration, Attendance, Certificate, PaymentComponent, ActivityLog.</div></div>
+        <div class="ent"><h4>BimtekEvent</h4><div class="rel"><b>1:N</b> FormField (urut per order_index), EventRegistration, EventSpeaker, Attendance, AttendanceSession, Certificate, PaymentComponent. Status: draft/open/ongoing/completed.</div></div>
+        <div class="ent"><h4>EventRegistration</h4><div class="rel"><b>N:1</b> BimtekEvent &amp; User; <b>1:N</b> RegistrationAnswer (jawaban field dinamis) &amp; Attendance. Kode unik <code>BMK-…</code>, status approved.</div></div>
+        <div class="ent"><h4>EventSpeaker</h4><div class="rel"><b>N:1</b> BimtekEvent &amp; Speaker. Topik, JP jam, tarif per JP, tarif pajak, materi. Aksesornya hitung <b>bruto/pajak/neto</b>.</div></div>
+        <div class="ent"><h4>Speaker</h4><div class="rel"><b>N:1</b> User; <b>1:N</b> EventSpeaker. Data master narasumber (golongan, rekening bank).</div></div>
+        <div class="ent"><h4>FormField &amp; RegistrationAnswer</h4><div class="rel">FormField <b>1:N</b> RegistrationAnswer. Skema form dinamis per event (tipe, opsi JSON, wajib, urutan).</div></div>
+        <div class="ent"><h4>ParticipantProfile &amp; SpeakerProfile</h4><div class="rel"><b>1:1</b> ke User. Menyimpan NIK/NPWP/rekening bank &amp; status verifikasi (<code>belum_diverifikasi / terverifikasi / perlu_perbaikan</code>).</div></div>
+        <div class="ent"><h4>PaymentComponent &amp; TaxParameter</h4><div class="rel">PaymentComponent: honorarium/uang jalan/transport dengan bruto–pajak–neto. TaxParameter: tabel lookup tarif PPh 21 per kategori golongan.</div></div>
+        <div class="ent"><h4>Certificate &amp; DocumentTemplate</h4><div class="rel">Certificate <b>N:1</b> Event &amp; User; nomor unik + file. DocumentTemplate: simpanan HTML &amp; kop surat untuk laporan resmi.</div></div>
+        <div class="ent"><h4>Attendance &amp; AttendanceSession</h4><div class="rel">Attendance: log presensi per pendaftaran (metode QR/manual/1-klik, admin verifikator). AttendanceSession: token &amp; secret_key rotasi QR dinamis.</div></div>
+        <div class="ent"><h4>ActivityLog</h4><div class="rel"><b>N:1</b> User. Catatan audit tak terhapus: aksi, modul, IP, <em>user agent</em>.</div></div>
+      </div>
+    </section>
+
+    <section id="fitur">
+      <p class="eyebrow">09 — Andalan</p>
+      <h2>Fitur Andalan</h2>
+      <p>Hal-hal yang membedakan sistem ini dari lembar kerja manual:</p>
+      <ul>
+        <li><strong>QR Presensi Dinamis (HMAC-SHA256)</strong> — Token berotasi setiap 10 menit, divalidasi server; mencegah screenshot/foto QR basi untuk absen palsu.</li>
+        <li><strong>PPh 21 Otomatis per Golongan</strong> — Golongan IV = 15%, III = 5%, Non-ASN = 2,5%; tarif dapat dikonfigurasi di pengaturan pajak.</li>
+        <li><strong>Auto-Match Sertifikat</strong> — Saat unggah massal, sistem mencocokkan file ke penerima lewat NIK, kode, atau token nama — menghemat kerja manual ratusan penautan.</li>
+        <li><strong>Real-time SSE</strong> — Dashboard admin &amp; <em>toast</em> diperbarui langsung saat pendaftaran/presensi masuk, tanpa memuat ulang halaman.</li>
+        <li><strong>Gatekeeper Profil per Peran</strong> — Peserta tidak bisa absen sebelum NIK &amp; rekening lengkap; narasumber sebelum materi &amp; dokungm verifikasi.</li>
+        <li><strong>Dokumen Privat Terproteksi</strong> — KTP/NPWP disajikan via <em>stream</em> terverifikasi dari disk non-publik, bukan URL langsung.</li>
+      </ul>
+    </section>
+
+    <section id="status">
+      <p class="eyebrow">10 — Status</p>
+      <h2>Status &amp; Akses Demo</h2>
+      <p>Sistem berstatus <strong>aktif / demo</strong> dengan data sampel realistis (peserta dari beragam OPD di Kab. Bogor). Tiga akun pengujian tersedia — semua dengan kata sandi <code>password</code>.</p>
+
+      <div class="demo">
+        <div class="acct"><div class="r">Administrator</div><div class="em">admin@bogorkab.go.id</div><div class="pw">Sandi: <b>password</b></div></div>
+        <div class="acct"><div class="r">Peserta ASN</div><div class="em">peserta@bogorkab.go.id</div><div class="pw">Sandi: <b>password</b></div></div>
+        <div class="acct"><div class="r">Narasumber</div><div class="em">pembicara@bogorkab.go.id</div><div class="pw">Sandi: <b>password</b></div></div>
+      </div>
+
+      <h3>Menjalankan</h3>
+      <ul>
+        <li><strong>Windows 1-klik</strong> — jalankan <code>jalankan-aplikasi.bat</code>; server multi-worker (<code>PHP_CLI_SERVER_WORKERS=4</code>) di <code>0.0.0.0:8000</code>, browser terbuka otomatis.</li>
+        <li><strong>Akses dari HP</strong> — hubungkan laptop &amp; HP ke Wi-Fi yang sama, buka <code>http://&lt;IP-laptop&gt;:8000</code> untuk menguji pemindai kamera QR.</li>
+        <li><strong>Docker</strong> — <code>Dockerfile</code> membangun <code>php:8.2-cli</code> + Node 20, memasang dependensi, menjalankan Vite build, dan menyajikan di port 8080.</li>
+        <li><strong>Antarmuka pemindai</strong> — <code>http://127.0.0.1:8000/attendance/scan</code>; layar QR proyektor admin di <code>/admin/events/&lt;id&gt;/qr-event</code>.</li>
+      </ul>
+      <div class="callout"><p>Tip: tombol <strong>Quick Switch</strong> di navbar kanan-atas (khusus admin) memungkinkan berganti peran secara instan tanpa logout — berguna saat menjelajahi alur tiap peran.</p></div>
+    </section>
+
+    <section id="penutup">
+      <p class="eyebrow">11 — Penutup</p>
+      <h2>Penutup</h2>
+      <p>Dokumen ini adalah titik mulai memahami SIM-BIMTEK secara menyeluruh. Untuk detail implementasi, rujuk langsung kode sumber — khususnya <code>routes/web.php</code> sebagai peta rute lengkap, direktori <code>app/Http/Controllers/</code> untuk logika bisnis, dan <code>resources/js/Pages/</code> untuk antarmuka pengguna.</p>
+      <p>Tujuan jangka panjang sistem: menjadi sumber tunggal kebenuran terpadu untuk seluruh kegiatan bimtek dan pelatihan kedinasan Diskominfo Kabupaten Bogor — akurat, auditable, dan efisien di lapangan.</p>
+      <hr class="thin">
+      <div class="footnote">
+        <p><strong>Sumber data:</strong> analisis langsung atas kode proyek per Sep 2026 — 16 model, 14 controller, 18 migrasi, struktur rute &amp; halaman React.</p>
+        <p>Disusun untuk tim APTIKA Diskominfo Kabupaten Bogor.</p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+  // Theme toggle
+  (function(){
+    var btn = document.getElementById('themetoggle');
+    var root = document.documentElement;
+    var saved = null;
+    try { saved = localStorage.getItem('prd-theme'); } catch(e){}
+    if (saved === 'dark' || saved === 'light') root.setAttribute('data-theme', saved);
+    function icon(){
+      var dark = root.getAttribute('data-theme') === 'dark' ||
+        (!root.getAttribute('data-theme') && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      btn.textContent = dark ? '☀️' : '🌒';
+    }
+    icon();
+    btn.addEventListener('click', function(){
+      var dark = root.getAttribute('data-theme') === 'dark' ||
+        (!root.getAttribute('data-theme') && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      root.setAttribute('data-theme', dark ? 'light' : 'dark');
+      try { localStorage.setItem('prd-theme', dark ? 'light' : 'dark'); } catch(e){}
+      icon();
+    });
+  })();
+
+  // TOC active highlight
+  (function(){
+    var links = document.querySelectorAll('.toc a');
+    var map = {};
+    links.forEach(function(a){ map[a.getAttribute('href').slice(1)] = a; });
+    var sections = Array.from(document.querySelectorAll('main section[id]'));
+    if (!('IntersectionObserver' in window)) return;
+    var obs = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if (e.isIntersecting){
+          links.forEach(function(l){ l.classList.remove('active'); });
+          var a = map[e.target.id];
+          if (a) a.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+    sections.forEach(function(s){ obs.observe(s); });
+  })();
+</script>
