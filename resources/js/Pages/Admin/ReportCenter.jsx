@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { usePage, Link } from '@inertiajs/react';
-import html2pdf from 'html2pdf.js';
 import AppLayout from '../../Layouts/AppLayout';
 import ResizableLogoCrud from '@/Components/ResizableLogoCrud';
 import { 
@@ -144,7 +143,13 @@ export default function ReportCenter({
     window.print();
   };
 
-  const handleExportPdf = () => {
+  const [isPdfLoading, setIsPdfLoading] = React.useState(false);
+
+  const handleExportPdf = async () => {
+    if (isPdfLoading) return;
+    setIsPdfLoading(true);
+    try {
+    const { default: html2pdf } = await import('html2pdf.js');
     const element = document.getElementById('word-document-sheet');
     if (!element) return;
 
@@ -159,6 +164,7 @@ export default function ReportCenter({
       jsPDF:        { unit: 'mm', format: 'a4', orientation: isLandscape ? 'landscape' : 'portrait' }
     };
     html2pdf().set(opt).from(element).save();
+    } finally { setIsPdfLoading(false); }
   };
 
   // Reset to initial event data
@@ -276,11 +282,12 @@ export default function ReportCenter({
 
               <button
                 onClick={handleExportPdf}
-                className="px-4 py-2 bg-blue-900 hover:bg-blue-950 text-white text-xs font-black rounded-xl shadow-xs flex items-center gap-1.5 transition-transform active:scale-95 cursor-pointer"
+                disabled={isPdfLoading}
+                className="px-4 py-2 bg-blue-900 hover:bg-blue-950 disabled:opacity-60 disabled:cursor-wait text-white text-xs font-black rounded-xl shadow-xs flex items-center gap-1.5 transition-transform active:scale-95 cursor-pointer"
                 title="Unduh sebagai file PDF A4"
               >
                 <Download className="w-4 h-4 text-amber-400" />
-                <span>Unduh PDF</span>
+                <span>{isPdfLoading ? 'Menyiapkan PDF...' : 'Unduh PDF'}</span>
               </button>
             </div>
           </div>

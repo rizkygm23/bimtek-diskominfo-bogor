@@ -31,11 +31,17 @@ Server lokal saat ini telah aktif di latar belakang. Anda dapat langsung membuka
 
 Tersedia file eksekusi otomatis **1-Klik**:
 
-1. Buka folder proyek:  
-   `C:\Users\User\.gemini\antigravity\scratch\bimtek-diskominfo-bogor`
+1. Buka folder proyek (sesuaikan dengan lokasi instalasi Anda):  
+   `C:\Users\HP\codingan\bimtek-diskominfo-bogor`
 2. Klik ganda file:  
-   `jalankan-aplikasi.bat`
+   `scripts\jalankan-aplikasi.bat`
 3. Jendela terminal akan terbuka dan browser Anda otomatis membuka `http://127.0.0.1:8000`.
+
+> **Alternatif Laragon:** Buka terminal Laragon (klik kanan tray icon → Terminal), lalu:
+> ```bash
+> cd C:\Users\HP\codingan\bimtek-diskominfo-bogor
+> php artisan serve --host=0.0.0.0 --port=8000
+> ```
 
 ---
 

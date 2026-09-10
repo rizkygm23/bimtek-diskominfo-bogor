@@ -18,7 +18,6 @@ import {
   AlignCenter,
   AlignRight
 } from 'lucide-react';
-import html2pdf from 'html2pdf.js';
 import { useParticipantRealtime } from '@/Hooks/useParticipantRealtime';
 import LiveConnectionBadge from '@/Components/LiveConnectionBadge';
 import RealtimeToast from '@/Components/RealtimeToast';
@@ -220,7 +219,13 @@ export default function ParticipantsReport({ events = [], selectedEventId, curre
     window.print();
   };
 
-  const handleExportPdf = () => {
+  const [isPdfLoading, setIsPdfLoading] = React.useState(false);
+
+  const handleExportPdf = async () => {
+    if (isPdfLoading) return;
+    setIsPdfLoading(true);
+    try {
+    const { default: html2pdf } = await import('html2pdf.js');
     const element = document.getElementById('attendance-official-sheet');
     if (!element) return;
 
@@ -233,6 +238,7 @@ export default function ParticipantsReport({ events = [], selectedEventId, curre
       pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
     };
     html2pdf().set(opt).from(element).save();
+    } finally { setIsPdfLoading(false); }
   };
 
   return (
@@ -369,11 +375,12 @@ export default function ParticipantsReport({ events = [], selectedEventId, curre
 
               <button
                 onClick={handleExportPdf}
-                className="px-4 py-2 bg-blue-900 hover:bg-blue-950 text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-transform active:scale-95 cursor-pointer"
+                disabled={isPdfLoading}
+                className="px-4 py-2 bg-blue-900 hover:bg-blue-950 disabled:opacity-60 disabled:cursor-wait text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-transform active:scale-95 cursor-pointer"
                 title="Unduh sebagai PDF A4"
               >
                 <Download className="w-4 h-4 text-amber-400" />
-                <span>Unduh PDF</span>
+                <span>{isPdfLoading ? 'Menyiapkan PDF...' : 'Unduh PDF'}</span>
               </button>
             </div>
           </div>

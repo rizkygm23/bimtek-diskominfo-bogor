@@ -17,4 +17,19 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+
+# Database
 /database/*.sqlite
+/database/*.sqlite-journal
+/database/*.sqlite-shm
+/database/*.sqlite-wal
+
+# Crash dumps & log artifacts
+*.stackdump
+*.log
+
+# OS files
+Thumbs.db
+ehthumbs.db
+.DS_Store
+desktop.ini

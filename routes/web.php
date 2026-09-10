@@ -117,7 +117,8 @@ Route::middleware('auth')->group(function () {
 
     // ATTENDANCE & DYNAMIC QR SCANNER
     Route::get('/attendance/scan', [AttendanceController::class, 'scanView'])->name('attendance.scan');
-    Route::post('/attendance/check-in', [AttendanceController::class, 'checkIn'])->name('attendance.check-in');
+    // Throttle: maks 10 req/menit/user — cegah spam scan QR
+    Route::post('/attendance/check-in', [AttendanceController::class, 'checkIn'])->middleware('throttle:10,1')->name('attendance.check-in');
 
     // PERSONAL CERTIFICATES
     Route::get('/my-certificates', [CertificateController::class, 'myCertificates'])->name('my-certificates');
@@ -138,7 +139,8 @@ Route::middleware('auth')->group(function () {
         // EVENT DYNAMIC QR CODE GENERATOR FOR HARI-H
         Route::get('/admin/events/{id}/qr-event', [AttendanceController::class, 'adminEventQr'])->name('admin.events.qr-event');
         Route::post('/admin/events/{id}/qr-session', [AttendanceController::class, 'generateNewQrSession'])->name('admin.events.qr-session');
-        Route::post('/admin/attendance/manual', [AttendanceController::class, 'adminManualCheckIn'])->name('admin.attendance.manual');
+        // Throttle: maks 30 req/menit/admin — presensi manual berurutan
+        Route::post('/admin/attendance/manual', [AttendanceController::class, 'adminManualCheckIn'])->middleware('throttle:30,1')->name('admin.attendance.manual');
 
         // EVENT CRUD
         Route::post('/admin/events/store', [BimtekEventController::class, 'store'])->name('admin.events.store');
@@ -182,8 +184,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/admin/template/attendance-excel', [BimtekEventController::class, 'downloadAttendanceTemplate'])->name('admin.template.attendance-excel');
 
         // REAL-TIME DATA STREAMING FOR ADMIN DASHBOARD
+        // Throttle: maks 60 req/menit/admin — polling 5s = 12/mnt, margin 5x
         Route::get('/admin/realtime-stream', [RealtimeController::class, 'stream'])->name('admin.realtime.stream');
-        Route::get('/admin/realtime-poll', [RealtimeController::class, 'poll'])->name('admin.realtime.poll');
+        Route::get('/admin/realtime-poll', [RealtimeController::class, 'poll'])->middleware('throttle:60,1')->name('admin.realtime.poll');
 
         // REPORT CENTER & EDITABLE SEPARATE REPORTS
         Route::get('/admin/report-center', [ReportCenterController::class, 'index'])->name('admin.report-center');

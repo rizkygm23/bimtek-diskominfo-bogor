@@ -85,9 +85,28 @@ npm run dev          # development (hot reload)
 
 ### Opsi 1 — Windows 1-klik (termudah)
 
-Klik ganda file **`jalankan-aplikasi.bat`**. Server multi-worker berjalan di `0.0.0.0:8000`, browser terbuka otomatis.
+Klik ganda file **`scripts/jalankan-aplikasi.bat`**. Server multi-worker berjalan di `0.0.0.0:8000`, browser terbuka otomatis.
 
-### Opsi 2 — Perintah manual
+> ⚠️ Memerlukan `php` tersedia di PATH. Jika pakai **Laragon**, jalankan via terminal Laragon (Klik kanan Laragon → Terminal) yang sudah include PHP di PATH, atau gunakan Opsi 2.
+
+### Opsi 2 — Laragon (rekomendasi Windows)
+
+Laragon sudah menyertakan PHP + Composer + MySQL. Cara menjalankan:
+
+1. **Buka terminal Laragon**: Klik kanan icon Laragon di tray → **Terminal** (Cmder). Di terminal ini `php` & `composer` sudah otomatis di PATH.
+2. **Masuk ke folder proyek**:
+   ```bash
+   cd C:\Users\HP\codingan\bimtek-diskominfo-bogor
+   ```
+3. **Jalankan server**:
+   ```bash
+   php artisan serve --host=0.0.0.0 --port=8000
+   ```
+4. Buka **http://127.0.0.1:8000** di browser.
+
+> 💡 **Catatan ext-zip:** Jika `composer install` gagal dengan error ext-zip, buka `C:\laragon\bin\php\php-*\php.ini`, cari baris `;extension=zip`, hapus tanda `;`-nya, lalu restart Laragon.
+
+### Opsi 3 — Perintah manual (PHP sudah di PATH)
 
 ```bash
 php artisan serve --host=0.0.0.0 --port=8000
@@ -95,7 +114,7 @@ php artisan serve --host=0.0.0.0 --port=8000
 
 Buka **http://127.0.0.1:8000** di browser.
 
-### Opsi 3 — Docker
+### Opsi 4 — Docker
 
 ```bash
 docker build -t sim-bimtek .
@@ -110,8 +129,9 @@ Saat menguji pemindai kamera QR presensi hari-H:
 
 1. Hubungkan laptop & HP ke **jaringan Wi-Fi yang sama**.
 2. Cari IP laptop (`ipconfig` di Windows, lihat *IPv4 Address*, mis. `192.168.1.15`).
-3. Di HP, buka browser dan akses `http://192.168.1.15:8000`.
-4. Login sebagai peserta → buka menu **"Presensi Hari-H"** untuk scan QR.
+3. (Opsional) Jalankan **`scripts/izinkan-akses-hp-firewall.bat`** sebagai Administrator untuk membuka port 8000 di Windows Firewall.
+4. Di HP, buka browser dan akses `http://192.168.1.15:8000`.
+5. Login sebagai peserta → buka menu **"Presensi Hari-H"** untuk scan QR.
 
 ---
 

@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { usePage, router, Link } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
-import { Html5Qrcode } from 'html5-qrcode';
 import {
   QrCode,
   CheckCircle2,
@@ -9,10 +8,8 @@ import {
   Camera,
   RefreshCw,
   AlertCircle,
-  ShieldCheck,
   FileSpreadsheet,
   StopCircle,
-  Wifi,
   Calendar,
   MapPin,
   BookOpen,
@@ -20,10 +17,12 @@ import {
   Award,
   Lock,
   ArrowRight,
-  FileText
+  FileText,
+  UserCheck,
+  Search
 } from 'lucide-react';
 
-export default function Scan({ events, myEvents, selectedEventId, recentAttendances, myAttendances, gatekeeperStatus }) {
+export default function Scan({ events, myEvents, selectedEventId, recentAttendances, eventRegistrations, myAttendances, gatekeeperStatus }) {
   const { auth, flash } = usePage().props;
   const user = auth?.user || {};
   const isAdmin = user.role === 'admin';
@@ -39,6 +38,46 @@ export default function Scan({ events, myEvents, selectedEventId, recentAttendan
   const [scannedSuccess, setScannedSuccess] = useState(false);
   const html5QrCodeRef = useRef(null);
   const processingRef = useRef(false);
+
+  // State untuk presensi manual admin
+  const [manualSearch, setManualSearch] = useState('');
+  const [manualPage, setManualPage] = useState(1);
+  const MANUAL_PAGE_SIZE = 20;
+  const [manualNotes, setManualNotes] = useState({});
+  const [manualProcessing, setManualProcessing] = useState({});
+
+  const handleManualCheckIn = (userId, name) => {
+    const note = (manualNotes[userId] || '').trim();
+    if (!note) {
+      alert('Mohon isi catatan/keterangan presensi manual untuk ' + name + ' terlebih dahulu (wajib).');
+      return;
+    }
+    setManualProcessing(prev => ({ ...prev, [userId]: true }));
+    router.post('/admin/attendance/manual', {
+      event_id: activeEventId || activeEvent?.id,
+      user_id: userId,
+      notes: note,
+    }, {
+      preserveScroll: true,
+      onFinish: () => {
+        setManualProcessing(prev => ({ ...prev, [userId]: false }));
+        setManualNotes(prev => ({ ...prev, [userId]: '' }));
+      },
+    });
+  };
+
+  const filteredRegistrations = (eventRegistrations || []).filter(reg => {
+    if (!manualSearch.trim()) return true;
+    const q = manualSearch.toLowerCase();
+    return (
+      (reg.name || '').toLowerCase().includes(q) ||
+      (reg.nip_nik || '').toLowerCase().includes(q) ||
+      (reg.instansi || '').toLowerCase().includes(q) ||
+      (reg.registration_code || '').toLowerCase().includes(q)
+    );
+  });
+  const pagedRegistrations = filteredRegistrations.slice(0, manualPage * MANUAL_PAGE_SIZE);
+  const hasMorePages = pagedRegistrations.length < filteredRegistrations.length;
 
   // Play auditory feedback beep
   const playBeep = () => {
@@ -68,6 +107,7 @@ export default function Scan({ events, myEvents, selectedEventId, recentAttendan
         await html5QrCodeRef.current.stop().catch(() => {});
       }
 
+      const { Html5Qrcode } = await import('html5-qrcode');
       const html5QrCode = new Html5Qrcode("qr-reader-container");
       html5QrCodeRef.current = html5QrCode;
       setCameraActive(true);
@@ -91,7 +131,7 @@ export default function Scan({ events, myEvents, selectedEventId, recentAttendan
         () => {}
       );
     } catch (err) {
-      setCameraError('Izin kamera ditolak atau peramban membatasi kamera pada jaringan HTTP lokal. Anda dapat langsung menekan tombol hijau "Verifikasi Presensi Saya Sekarang" di bawah.');
+      setCameraError('Izin kamera ditolak atau peramban membatasi kamera pada jaringan HTTP lokal. Jika kamera bermasalah, mohon hubungi Admin untuk dicatatkan presensi secara manual.');
       setCameraActive(false);
     }
   };
@@ -138,6 +178,7 @@ export default function Scan({ events, myEvents, selectedEventId, recentAttendan
 
     setCameraError(null);
     try {
+      const { Html5Qrcode } = await import('html5-qrcode');
       const html5QrCode = new Html5Qrcode("qr-reader-container");
       const decodedText = await html5QrCode.scanFile(file, false);
       playBeep();
@@ -146,15 +187,8 @@ export default function Scan({ events, myEvents, selectedEventId, recentAttendan
       }
       handleQrCheckin(decodedText);
     } catch (err) {
-      setCameraError('QR Code tidak terdeteksi pada foto tersebut. Pastikan foto QR Code tegak dan jelas, atau tekan tombol hijau "Verifikasi Presensi Saya Sekarang" di bawah.');
+      setCameraError('QR Code tidak terdeteksi pada foto tersebut. Pastikan foto QR Code tegak dan jelas. Jika tetap bermasalah, mohon hubungi Admin untuk dicatatkan presensi secara manual.');
     }
-  };
-
-  const handleSelfVerify = () => {
-    router.post('/attendance/check-in', {
-      event_id: activeEventId || activeEvent?.id,
-      method: 'self_verify',
-    });
   };
 
   const formatDate = (dateStr) => {
@@ -252,6 +286,127 @@ export default function Scan({ events, myEvents, selectedEventId, recentAttendan
                 <QrCode className="w-4 h-4" />
                 <span>Tampilkan QR Code Proyektor →</span>
               </Link>
+            </div>
+
+            {/* KARTU PRESENSI MANUAL */}
+            <div className="bg-white border-2 border-amber-300 rounded-3xl p-6 shadow-xs space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3 flex-wrap gap-2">
+                <h2 className="text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                  <UserCheck className="w-5 h-5 text-amber-600" />
+                  <span>Presensi Manual Peserta</span>
+                </h2>
+                <span className="text-xs font-black text-amber-800 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
+                  {(eventRegistrations || []).filter(r => !r.has_attended).length} Belum Hadir
+                </span>
+              </div>
+
+              <p className="text-[11px] text-slate-600 leading-relaxed">
+                Gunakan form ini jika peserta/pembicara mengalami kendala saat scan QR (kamera rusak, QR tidak terbaca, dsb). Pilih peserta, isi keterangan, lalu catat presensi. Presensi manual tercatat dengan metode <strong className="text-slate-800">"manual_admin"</strong> beserta nama Admin yang mencatat.
+              </p>
+
+              {/* Search bar */}
+              <div className="relative">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={manualSearch}
+                  onChange={(e) => { setManualSearch(e.target.value); setManualPage(1); }}
+                  placeholder="Cari nama / NIP / instansi / kode pendaftaran..."
+                  className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                />
+              </div>
+
+              {/* Daftar peserta terdaftar */}
+              {filteredRegistrations.length > 0 ? (
+                <div className="space-y-2.5">
+                  {pagedRegistrations.map((reg) => (
+                    <div
+                      key={reg.registration_id}
+                      className={`p-3.5 rounded-2xl border space-y-2.5 transition-all ${
+                        reg.has_attended
+                          ? 'bg-emerald-50 border-emerald-200'
+                          : 'bg-slate-50 border-slate-200'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="space-y-0.5 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-xs font-black text-slate-900 truncate">{reg.name}</span>
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold shrink-0 ${
+                              reg.role === 'pembicara' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                            }`}>
+                              {reg.role === 'pembicara' ? 'Narasumber' : 'Peserta'}
+                            </span>
+                            {reg.has_attended && (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-600 text-white shrink-0 flex items-center gap-1">
+                                <CheckCircle2 className="w-3 h-3" />
+                                Sudah Hadir
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[10px] text-slate-500 font-mono">
+                            {reg.nip_nik} • {reg.instansi} • {reg.jabatan}
+                          </p>
+                          <p className="text-[10px] text-slate-400 font-mono">
+                            Kode: {reg.registration_code} • Status: {reg.status}
+                          </p>
+                        </div>
+                      </div>
+
+                      {!reg.has_attended && (
+                        <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                          <input
+                            type="text"
+                            value={manualNotes[reg.user_id] || ''}
+                            onChange={(e) => setManualNotes(prev => ({ ...prev, [reg.user_id]: e.target.value }))}
+                            placeholder="Keterangan (wajib), cth: kamera HP rusak, QR tidak terbaca..."
+                            className="flex-1 px-3 py-2 bg-white border border-slate-300 rounded-xl text-[11px] font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                          />
+                          <button
+                            type="button"
+                            disabled={!!manualProcessing[reg.user_id]}
+                            onClick={() => handleManualCheckIn(reg.user_id, reg.name)}
+                            className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-60 disabled:cursor-not-allowed text-white text-[11px] font-black shadow-md flex items-center justify-center gap-1.5 cursor-pointer transition-transform active:scale-95 whitespace-nowrap"
+                          >
+                            <UserCheck className="w-3.5 h-3.5" />
+                            <span>{manualProcessing[reg.user_id] ? 'Memproses...' : 'Catat Presensi'}</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+
+                  {/* Tombol muat lebih — hanya render jika ada sisa */}
+                  {hasMorePages && (
+                    <button
+                      type="button"
+                      onClick={() => setManualPage(p => p + 1)}
+                      className="w-full py-2.5 rounded-xl border-2 border-dashed border-slate-300 hover:border-amber-400 text-xs font-bold text-slate-500 hover:text-amber-700 transition-colors cursor-pointer"
+                    >
+                      Muat {Math.min(MANUAL_PAGE_SIZE, filteredRegistrations.length - pagedRegistrations.length)} peserta lagi
+                      ({filteredRegistrations.length - pagedRegistrations.length} tersisa)
+                    </button>
+                  )}
+
+                  {/* Info jumlah ditampilkan */}
+                  {filteredRegistrations.length > MANUAL_PAGE_SIZE && (
+                    <p className="text-center text-[10px] text-slate-400">
+                      Menampilkan {pagedRegistrations.length} dari {filteredRegistrations.length} peserta
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="py-10 text-center text-slate-400 space-y-2">
+                  <UserCheck className="w-8 h-8 mx-auto text-slate-300" />
+                  <p className="text-xs italic">
+                    {manualSearch.trim()
+                      ? 'Tidak ada peserta yang cocok dengan pencarian.'
+                      : (eventRegistrations || []).length === 0
+                        ? 'Belum ada peserta terdaftar pada kegiatan ini.'
+                        : 'Semua peserta terdaftar sudah hadir 🎉'}
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4">
@@ -531,35 +686,27 @@ export default function Scan({ events, myEvents, selectedEventId, recentAttendan
                           <div className="space-y-1">
                             <span className="block">{cameraError}</span>
                             <p className="text-[11px] font-normal text-amber-800">
-                              Tips: Anda juga bisa menekan tombol <strong>"Foto QR Code (Kamera HP)"</strong> di atas atau tombol hijau di bawah untuk presensi instan.
+                              Tips: Anda juga bisa menekan tombol <strong>"Foto QR Code (Kamera HP)"</strong> di atas. Jika kamera/foto tetap bermasalah, mohon hubungi petugas Admin untuk presensi manual.
                             </p>
                           </div>
                         </div>
                       )}
 
-                      {/* Self-verify fallback */}
-                      <div className="p-4 bg-emerald-50 border-2 border-emerald-300 rounded-2xl space-y-2.5">
+                      {/* Info: hubungi admin jika kendala kamera */}
+                      <div className="p-4 bg-slate-50 border-2 border-slate-200 rounded-2xl space-y-2.5">
                         <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-black uppercase text-emerald-950 flex items-center gap-1.5">
-                            <ShieldCheck className="w-4 h-4 text-emerald-700" />
-                            <span>Presensi Instan 1-Klik:</span>
+                          <span className="text-[11px] font-black uppercase text-slate-800 flex items-center gap-1.5">
+                            <AlertCircle className="w-4 h-4 text-slate-600" />
+                            <span>Kendala Kamera / Absensi?</span>
                           </span>
-                          <span className="text-[10px] font-bold text-emerald-800 bg-emerald-200/80 px-2 py-0.5 rounded-full flex items-center gap-1">
-                            <Wifi className="w-3 h-3" />
-                            <span>{user.name}</span>
+                          <span className="text-[10px] font-bold text-slate-600 bg-slate-200/80 px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <UserCheck className="w-3 h-3" />
+                            <span>Admin</span>
                           </span>
                         </div>
                         <p className="text-[11px] text-slate-700 leading-relaxed font-medium">
-                          Jika tidak ingin membuka kamera, Anda dapat langsung menekan tombol hijau di bawah untuk mencatat kehadiran Anda pada kegiatan <strong>"{activeEvent.title}"</strong>.
+                          Jika kamera tidak berfungsi atau Anda mengalami kendala saat absensi pada kegiatan <strong>"{activeEvent.title}"</strong>, mohon hubungi petugas Admin (Panitia) untuk dicatatkan presensi secara manual. Presensi mandiri <strong>wajib</strong> via scan QR Code resmi yang ditayangkan di layar proyektor.
                         </p>
-                        <button
-                          type="button"
-                          onClick={handleSelfVerify}
-                          className="w-full py-3.5 bg-emerald-700 hover:bg-emerald-600 text-white font-black text-xs rounded-xl shadow-lg flex items-center justify-center gap-2 cursor-pointer transition-transform active:scale-95"
-                        >
-                          <CheckCircle2 className="w-4 h-4 text-amber-300" />
-                          <span>Verifikasi Presensi Saya Sekarang (1-Klik) →</span>
-                        </button>
                       </div>
                     </div>
                   )}
@@ -602,7 +749,7 @@ export default function Scan({ events, myEvents, selectedEventId, recentAttendan
                     <div className="py-12 text-center text-slate-400 space-y-2">
                       <Clock className="w-8 h-8 mx-auto text-slate-300" />
                       <p className="text-xs font-bold text-slate-700">Belum ada catatan presensi.</p>
-                      <p className="text-[11px] text-slate-500">Nyalakan kamera HP atau tekan Verifikasi Presensi.</p>
+                      <p className="text-[11px] text-slate-500">Nyalakan kamera HP lalu scan QR Code proyektor Admin untuk presensi.</p>
                     </div>
                   )}
                 </div>

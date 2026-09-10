@@ -28,6 +28,7 @@ class AttendanceController extends Controller
         $selectedEventId = $request->query('event_id', $allEvents->first()?->id);
 
         $recentAttendances = [];
+        $eventRegistrations = [];
         $myAttendances = [];
         $myEvents = [];
 
@@ -44,6 +45,30 @@ class AttendanceController extends Controller
                     ->with(['user', 'event'])
                     ->orderBy('checked_in_at', 'desc')
                     ->get();
+
+                // Daftar peserta terdaftar untuk presensi manual admin
+                $checkedInUserIds = $recentAttendances->pluck('user_id')->toArray();
+                $eventRegistrations = EventRegistration::where('bimtek_event_id', $selectedEventId)
+                    ->with(['user' => function ($q) {
+                        $q->select('id', 'name', 'nip_nik', 'instansi', 'jabatan', 'role');
+                    }])
+                    ->orderBy('registered_at', 'desc')
+                    ->get()
+                    ->map(function ($reg) use ($checkedInUserIds) {
+                        return [
+                            'registration_id' => $reg->id,
+                            'user_id' => $reg->user_id,
+                            'name' => $reg->user?->name ?? '-',
+                            'nip_nik' => $reg->user?->nip_nik ?? '-',
+                            'instansi' => $reg->user?->instansi ?? '-',
+                            'jabatan' => $reg->user?->jabatan ?? '-',
+                            'role' => $reg->user?->role ?? 'user',
+                            'registration_code' => $reg->registration_code,
+                            'status' => $reg->status,
+                            'has_attended' => in_array($reg->user_id, $checkedInUserIds),
+                        ];
+                    })
+                    ->values();
             }
         } elseif ($user->role === 'pembicara') {
             // Ambil event penugasan narasumber
@@ -152,6 +177,7 @@ class AttendanceController extends Controller
             'myEvents' => $myEvents,
             'selectedEventId' => (int) $selectedEventId,
             'recentAttendances' => $recentAttendances,
+            'eventRegistrations' => $eventRegistrations,
             'myAttendances' => $myAttendances,
             'gatekeeperStatus' => $gatekeeperStatus,
         ]);
@@ -245,189 +271,201 @@ class AttendanceController extends Controller
     }
 
     /**
-     * Peserta/Pembicara: Check-in presensi Hari-H.
-     * Bisa via QR scan (token dari QR admin) atau self-verify (tombol 1-klik).
+     * Peserta/Pembicara: Check-in presensi Hari-H via scan QR Code resmi.
      */
     public function checkIn(Request $request)
     {
-        $tokenData = $request->input('token');
-        $eventId = $request->input('event_id');
-        $method = $request->input('method', 'qr_scan');
+        $user  = auth()->user();
+        $event = null;
 
-        // Auto-extract event_id from QR JSON payload if available
-        $parsedToken = null;
-        if (!empty($tokenData)) {
-            $decoded = json_decode($tokenData, true);
-            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                if (isset($decoded['event_id'])) {
-                    $eventId = (int) $decoded['event_id'];
-                }
-                if (isset($decoded['token'])) {
-                    $parsedToken = $decoded['token'];
-                }
-            } else {
-                $parsedToken = $tokenData;
-            }
-        }
+        // 1. Parse QR payload (JSON atau raw token)
+        [$eventId, $parsedToken] = $this->parseQrPayload(
+            $request->input('token'),
+            $request->input('event_id')
+        );
 
         if (!$eventId) {
             return back()->with('error', '⚠️ Silakan pilih kegiatan BIMTEK terlebih dahulu atau scan QR Code resmi.');
         }
 
-        $user = auth()->user();
         $event = BimtekEvent::findOrFail($eventId);
 
-        // 1. Validasi token QR jika metode qr_scan
-        if ($method === 'qr_scan' && !empty($parsedToken)) {
-            $session = AttendanceSession::where('event_id', $eventId)
-                ->where('token', $parsedToken)
-                ->first();
-
-            if (!$session || !$session->is_active || now()->gt($session->valid_until)) {
-                return back()->with('error', '⚠️ QR CODE SUDAH KADALUARSA: Silakan scan QR Code terbaru yang ditampilkan di layar Admin.');
-            }
+        // 2. Validasi token QR resmi (anti-fraud, wajib)
+        if (!$this->validateQrToken($eventId, $parsedToken)) {
+            return back()->with('error', '⚠️ QR CODE TIDAK VALID / KADALUARSA: Silakan scan QR Code terbaru di layar Admin. Jika kamera bermasalah, hubungi Admin untuk presensi manual.');
         }
 
-        // 2. Validasi Keikutsertaan / Penugasan Berdasarkan Role
-        $registrationId = null;
-
-        if ($user->role === 'pembicara') {
-            // A. Khusus Narasumber: Cek penugasan EventSpeaker & kelengkapan administrasi (Bukan EventRegistration)
-            $speaker = \App\Models\Speaker::where('user_id', $user->id)->first();
-            $eventSpeaker = $speaker ? \App\Models\EventSpeaker::where('bimtek_event_id', $eventId)->where('speaker_id', $speaker->id)->first() : null;
-            $speakerProfile = \App\Models\SpeakerProfile::where('user_id', $user->id)->first();
-
-            $hasBank = !empty($speakerProfile?->bank_name) && !empty($speakerProfile?->account_number);
-            $hasTopic = !empty($eventSpeaker?->topic);
-            $hasDocs = !empty($speakerProfile?->foto_ktp_path) && !empty($speakerProfile?->foto_npwp_path) && !empty($speakerProfile?->salinan_buku_rekening_path);
-
-            if (!$eventSpeaker || !$hasBank || !$hasTopic || !$hasDocs) {
-                return redirect()->route('events.register', $eventId)
-                    ->with('error', '⚠️ PERHATIAN NARASUMBER: Anda wajib mengonfirmasi penugasan dan mengunggah semua berkas persyaratan (KTP, NPWP, Salinan Buku Rekening) sebelum dapat melakukan absensi.');
-            }
-        } else {
-            // B. Khusus Peserta: Cek pendaftaran di EventRegistration dan kelengkapan data NIK/Rekening
-            $registration = EventRegistration::where('bimtek_event_id', $eventId)
-                ->where('user_id', $user->id)
-                ->first();
-            $profile = \App\Models\ParticipantProfile::where('user_id', $user->id)->first();
-
-            $hasNik = !empty($profile?->nik) || !empty($user->nip_nik);
-            $hasBank = !empty($profile?->bank_name) && !empty($profile?->account_number);
-
-            if (!$registration || !$hasNik || !$hasBank) {
-                return redirect()->route('events.register', $eventId)
-                    ->with('error', '⚠️ ABSENSI DITOLAK: Anda wajib mengisi semua data administrasi, NIK KTP, dan rekening pencairan di formulir pendaftaran terlebih dahulu sebelum dapat melakukan absensi.');
-            }
-            $registrationId = $registration->id;
+        // 3. Validasi eligibilitas peserta/narasumber
+        $eligibility = $this->validateParticipantEligibility($user, $eventId);
+        if (!$eligibility['ok']) {
+            return redirect($eligibility['redirect'])->with('error', $eligibility['message']);
         }
 
-        // 3. Cek duplikasi presensi
-        $existing = Attendance::where('event_id', $eventId)
-            ->where('user_id', $user->id)
-            ->first();
-
-        if ($existing) {
-            return back()->with('success', '✓ ANDA SUDAH PRESENSI: Kehadiran Anda dalam kegiatan ini sudah tercatat sebelumnya pada ' . $existing->checked_in_at->format('d/m/Y H:i') . '.');
+        // 4. Catat presensi — DB constraint menangkap duplikat
+        $roleType = $user->role === 'pembicara' ? 'pembicara' : 'peserta';
+        try {
+            Attendance::create([
+                'registration_id' => $eligibility['registration_id'],
+                'user_id'         => $user->id,
+                'event_id'        => $eventId,
+                'role_type'       => $roleType,
+                'attendance_type' => 'absensi_hari_h',
+                'checkin_method'  => 'qr_scan',
+                'checked_in_at'   => now(),
+                'notes'           => $roleType === 'pembicara'
+                    ? 'Presensi Narasumber / Pemateri Kegiatan BIMTEK'
+                    : 'Presensi Peserta via Scan QR Code Admin',
+            ]);
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Unique constraint violation — sudah presensi sebelumnya
+            return back()->with('success', '✓ ANDA SUDAH PRESENSI: Kehadiran Anda dalam kegiatan ini sudah tercatat sebelumnya.');
         }
 
-        // 4. Catat presensi resmi
-        $roleType = ($user->role === 'pembicara') ? 'pembicara' : 'peserta';
-        $checkinMethod = ($method === 'self_verify') ? 'self_verify' : 'qr_scan';
-
-        Attendance::create([
-            'registration_id' => $registrationId,
-            'user_id' => $user->id,
-            'event_id' => $eventId,
-            'role_type' => $roleType,
-            'attendance_type' => 'absensi_hari_h',
-            'checkin_method' => $checkinMethod,
-            'checked_in_at' => now(),
-            'notes' => $roleType === 'pembicara'
-                ? 'Presensi Narasumber / Pemateri Kegiatan BIMTEK'
-                : ($checkinMethod === 'qr_scan' ? 'Presensi Peserta via Scan QR Code Admin' : 'Presensi Peserta via Verifikasi Mandiri'),
-        ]);
+        // 5. Broadcast real-time ke dashboard admin
+        $this->broadcastAttendance($user, $event, $roleType, $eligibility['registration_id']);
 
         $roleLabel = $roleType === 'pembicara' ? 'Narasumber' : 'Peserta';
-
-        // REAL-TIME BROADCAST: Push attendance event to real-time projector & dashboard & admin reports
-        try {
-            \App\Services\RealtimeStreamService::pushEvent('AttendanceRecorded', [
-                'event_id' => $eventId,
-                'user_id' => $user->id,
-                'participant_name' => $user->name,
-                'role_type' => $roleType,
-                'role_label' => $roleLabel,
-                'checked_in_at' => now()->format('H:i') . ' WIB',
-            ]);
-
-            \App\Services\RealtimeStreamService::pushEvent('ParticipantRegistered', [
-                'id' => $registration->id,
-                'participant_name' => $user->name,
-                'nip_nik' => $user->nip_nik ?? '-',
-                'instansi' => $user->instansi ?? 'Umum',
-                'jabatan' => $user->jabatan ?? 'Peserta BIMTEK',
-                'bimtek_id' => $eventId,
-                'bimtek_name' => $event->title,
-                'registration_code' => $registration->registration_code,
-                'registration_status' => 'APPROVED',
-                'registered_at' => now()->format('H:i') . ' WIB',
-            ]);
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('Real-time AttendanceRecorded push error: ' . $e->getMessage());
-        }
-
         return back()->with('success', "🎉 PRESENSI BERHASIL! Kehadiran Anda sebagai {$roleLabel} pada kegiatan \"{$event->title}\" telah tercatat.");
     }
 
     /**
-     * Admin: Presensi manual untuk peserta/pembicara.
+     * Admin: Presensi manual untuk peserta/pembicara yang bermasalah saat scan QR.
      */
     public function adminManualCheckIn(Request $request)
     {
         $validated = $request->validate([
             'event_id' => 'required|exists:bimtek_events,id',
-            'user_id' => 'required|exists:users,id',
-            'notes' => 'required|string|max:500',
+            'user_id'  => 'required|exists:users,id',
+            'notes'    => 'required|string|max:500',
         ]);
 
         $targetUser = User::findOrFail($validated['user_id']);
-        $eventId = $validated['event_id'];
+        $eventId    = $validated['event_id'];
 
         $registration = EventRegistration::firstOrCreate(
-            [
-                'bimtek_event_id' => $eventId,
-                'user_id' => $targetUser->id,
-            ],
-            [
-                'registration_code' => 'MAN-' . strtoupper(Str::random(6)),
-                'status' => 'approved',
-                'registered_at' => now(),
-            ]
+            ['bimtek_event_id' => $eventId, 'user_id' => $targetUser->id],
+            ['registration_code' => 'MAN-' . strtoupper(Str::random(6)), 'status' => 'approved', 'registered_at' => now()]
         );
 
-        $existing = Attendance::where('event_id', $eventId)
-            ->where('user_id', $targetUser->id)
-            ->first();
+        $roleType = $targetUser->role === 'pembicara' ? 'pembicara' : 'peserta';
 
-        if ($existing) {
-            return back()->with('error', 'Peserta/Pembicara ini sudah memiliki catatan presensi.');
+        try {
+            Attendance::create([
+                'registration_id'     => $registration->id,
+                'user_id'             => $targetUser->id,
+                'event_id'            => $eventId,
+                'role_type'           => $roleType,
+                'attendance_type'     => 'absensi_manual_admin',
+                'checkin_method'      => 'manual_admin',
+                'verified_by_admin_id' => auth()->id(),
+                'checked_in_at'       => now(),
+                'notes'               => '[Presensi Manual Admin] ' . $validated['notes'],
+            ]);
+        } catch (\Illuminate\Database\QueryException $e) {
+            return back()->with('error', "{$targetUser->name} sudah memiliki catatan presensi pada kegiatan ini.");
         }
 
-        $roleType = ($targetUser->role === 'pembicara') ? 'pembicara' : 'peserta';
+        return back()->with('success', "✓ Presensi manual untuk {$targetUser->name} berhasil dicatat oleh Admin.");
+    }
 
-        Attendance::create([
-            'registration_id' => $registration->id,
-            'user_id' => $targetUser->id,
-            'event_id' => $eventId,
-            'role_type' => $roleType,
-            'attendance_type' => 'absensi_manual_admin',
-            'checkin_method' => 'manual_admin',
-            'verified_by_admin_id' => auth()->id(),
-            'checked_in_at' => now(),
-            'notes' => '[Presensi Manual Admin] ' . $validated['notes'],
-        ]);
+    // ──────────────────────────────────────────────────────────────────────────
+    // PRIVATE HELPERS
+    // ──────────────────────────────────────────────────────────────────────────
 
-        return back()->with('success', "Presensi manual untuk {$targetUser->name} berhasil dicatat.");
+    /**
+     * Parse raw QR token atau JSON payload QR code.
+     * Returns [eventId, parsedToken].
+     */
+    private function parseQrPayload(?string $tokenData, mixed $rawEventId): array
+    {
+        $eventId     = $rawEventId;
+        $parsedToken = null;
+
+        if (!empty($tokenData)) {
+            $decoded = json_decode($tokenData, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $eventId     = $decoded['event_id'] ?? $eventId;
+                $parsedToken = $decoded['token'] ?? null;
+            } else {
+                $parsedToken = $tokenData;
+            }
+        }
+
+        return [(int) $eventId ?: null, $parsedToken];
+    }
+
+    /**
+     * Validasi token QR aktif untuk event tertentu.
+     */
+    private function validateQrToken(?int $eventId, ?string $token): bool
+    {
+        if (!$token || !$eventId) {
+            return false;
+        }
+        $session = AttendanceSession::where('event_id', $eventId)
+            ->where('token', $token)
+            ->first();
+
+        return $session && $session->is_active && now()->lte($session->valid_until);
+    }
+
+    /**
+     * Validasi eligibilitas user (peserta/pembicara) untuk check-in pada event.
+     * Returns ['ok'=>bool, 'registration_id'=>?int, 'message'=>string, 'redirect'=>string]
+     */
+    private function validateParticipantEligibility(User $user, int $eventId): array
+    {
+        if ($user->role === 'pembicara') {
+            $speaker      = \App\Models\Speaker::where('user_id', $user->id)->first();
+            $eventSpeaker = $speaker
+                ? \App\Models\EventSpeaker::where('bimtek_event_id', $eventId)->where('speaker_id', $speaker->id)->first()
+                : null;
+            $profile = \App\Models\SpeakerProfile::where('user_id', $user->id)->first();
+
+            $ok = $eventSpeaker
+                && !empty($eventSpeaker->topic)
+                && !empty($profile?->bank_name) && !empty($profile?->account_number)
+                && !empty($profile?->foto_ktp_path) && !empty($profile?->foto_npwp_path) && !empty($profile?->salinan_buku_rekening_path);
+
+            return [
+                'ok'              => $ok,
+                'registration_id' => null,
+                'message'         => '⚠️ PERHATIAN NARASUMBER: Anda wajib mengonfirmasi penugasan dan mengunggah semua berkas persyaratan (KTP, NPWP, Salinan Buku Rekening) sebelum dapat melakukan absensi.',
+                'redirect'        => route('events.register', $eventId),
+            ];
+        }
+
+        // Peserta biasa
+        $registration = EventRegistration::where('bimtek_event_id', $eventId)->where('user_id', $user->id)->first();
+        $profile      = \App\Models\ParticipantProfile::where('user_id', $user->id)->first();
+        $hasNik       = !empty($profile?->nik) || !empty($user->nip_nik);
+        $hasBank      = !empty($profile?->bank_name) && !empty($profile?->account_number);
+        $ok           = $registration && $hasNik && $hasBank;
+
+        return [
+            'ok'              => $ok,
+            'registration_id' => $registration?->id,
+            'message'         => '⚠️ ABSENSI DITOLAK: Anda wajib mengisi semua data administrasi, NIK KTP, dan rekening pencairan di formulir pendaftaran terlebih dahulu.',
+            'redirect'        => route('events.register', $eventId),
+        ];
+    }
+
+    /**
+     * Broadcast event presensi ke dashboard real-time admin (non-blocking).
+     */
+    private function broadcastAttendance(User $user, BimtekEvent $event, string $roleType, ?int $registrationId): void
+    {
+        try {
+            \App\Services\RealtimeStreamService::pushEvent('AttendanceRecorded', [
+                'event_id'         => $event->id,
+                'user_id'          => $user->id,
+                'participant_name' => $user->name,
+                'role_type'        => $roleType,
+                'role_label'       => $roleType === 'pembicara' ? 'Narasumber' : 'Peserta',
+                'checked_in_at'    => now()->format('H:i') . ' WIB',
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Real-time broadcast error: ' . $e->getMessage());
+        }
     }
 }
