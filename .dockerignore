@@ -1,0 +1,37 @@
+# Don't send these to the Docker builder — keeps build context small & image clean.
+# Dependencies are reinstalled inside the image via composer/npm.
+vendor
+node_modules
+
+# Local env & secrets — Railway injects real vars at runtime
+.env
+.env.backup
+.env.production
+
+# Build artifacts that should be regenerated inside the image
+public/build
+public/hot
+public/storage
+
+# Local SQLite DBs
+database/*.sqlite
+database/*.sqlite-*
+
+# IDE / OS clutter
+.idea
+.vscode
+.fleet
+.git
+.phpunit.cache
+.phpunit.result.cache
+npm-debug.log
+yarn-error.log
+*.stackdump
+Thumbs.db
+ehthumbs.db
+.DS_Store
+desktop.ini
+
+# Keep Dockerfile & entrypoint IN the context — they're needed by the build.
+# Only ignore the docker-compose / dev artifacts if any.
+

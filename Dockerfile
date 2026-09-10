@@ -1,41 +1,49 @@
+# Laravel 11 + Inertia.js + React production image
+# Used by Railway's Docker (Railpack) builder.
 FROM php:8.2-cli
 
 WORKDIR /var/www/html
 
-# Install system dependencies & PHP extensions (termasuk pdo_mysql)
+# Install PHP extensions required by Laravel + this app (pdo_mysql, gd, zip, etc.)
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
     libsqlite3-dev \
     libzip-dev \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
     curl \
-    && docker-php-ext-install pdo pdo_mysql pdo_sqlite zip \
-    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install pdo pdo_mysql pdo_sqlite zip gd mbstring xml bcmath \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Node 20 for the Vite build step
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs
 
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Copy project files
+# Copy application source
 COPY . .
 
-# Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader
+# Install PHP deps (no-dev, optimized for production)
+RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Install frontend dependencies and build Vite
-RUN npm install
-RUN npm run build
+# Build frontend assets with Vite
+RUN npm ci && npm run build
 
-# Clear caches
-RUN php artisan config:clear
-RUN php artisan route:clear
-RUN php artisan view:clear
+# Ensure storage & bootstrap/cache are writable by the runtime user.
+# Railway runs containers as non-root by default where possible; 775 is permissive enough.
+RUN mkdir -p storage/app/public storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache
 
-# Prepare directories
-RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache
-RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+# Entrypoint script that runs migrations + conditional seeding at boot.
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 EXPOSE 8080
 
-CMD ["sh", "-c", "php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"]
+# Railway injects $PORT. The entrypoint migrates, seeds, caches, then serves.
+CMD ["/usr/local/bin/docker-entrypoint.sh"]
