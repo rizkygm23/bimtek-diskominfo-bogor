@@ -222,9 +222,28 @@ class BimtekEventController extends Controller
                     ['registration_code' => 'REG-' . strtoupper(Str::random(6)), 'status' => 'approved']
                 );
 
+                // Catat kehadiran untuk riwayat kegiatan (status completed).
+                // FIX bug sebelumnya:
+                //  - Kolom 'event_registration_id' TIDAK ADA di tabel attendances
+                //    (kolom sebenarnya 'registration_id') → firstOrCreate selalu
+                //    CREATE baru, duplikat, dengan field null.
+                //  - 'checkin_method' => 'manual_entry' BUKAN nilai enum valid.
+                //    Enum DB hanya ['qr_scan','manual_admin']. Nilai invalid
+                //    → QueryException (strict) atau record rusak (non-strict).
+                //  - 'user_id' & 'event_id' tidak diisi → record tidak punya
+                //    relasi → tidak muncul di laporan/scan peserta.
+                // Sekarang: key pakai (user_id, event_id) yang unique + field
+                // lengkap + checkin_method valid.
                 Attendance::firstOrCreate(
-                    ['event_registration_id' => $registration->id],
-                    ['checked_in_at' => now(), 'check_in_method' => 'manual_entry']
+                    ['user_id' => $user->id, 'event_id' => $event->id],
+                    [
+                        'registration_id' => $registration->id,
+                        'role_type'       => 'peserta',
+                        'attendance_type' => 'absensi_manual_admin',
+                        'checkin_method'  => 'manual_admin',
+                        'checked_in_at'   => now(),
+                        'notes'           => 'Import Riwayat Kegiatan BIMTEK (Admin)',
+                    ]
                 );
 
                 $importedCount++;
@@ -267,9 +286,19 @@ class BimtekEventController extends Controller
                     ['registration_code' => 'REG-' . strtoupper(Str::random(6)), 'status' => 'approved']
                 );
 
+                // FIX: lihat catatan di Option A. Kolom salah + enum invalid +
+                // field tidak diisi. Sekarang pakai key (user_id, event_id) +
+                // field lengkap + checkin_method valid.
                 Attendance::firstOrCreate(
-                    ['event_registration_id' => $registration->id],
-                    ['checked_in_at' => now(), 'check_in_method' => 'excel_import']
+                    ['user_id' => $user->id, 'event_id' => $event->id],
+                    [
+                        'registration_id' => $registration->id,
+                        'role_type'       => 'peserta',
+                        'attendance_type' => 'absensi_manual_admin',
+                        'checkin_method'  => 'manual_admin',
+                        'checked_in_at'   => now(),
+                        'notes'           => 'Import Riwayat Kegiatan BIMTEK via Excel/CSV (Admin)',
+                    ]
                 );
 
                 $importedCount++;
@@ -396,13 +425,18 @@ class BimtekEventController extends Controller
             );
 
             // Record Attendance
+            // FIX: lihat catatan di storeHistoryEvent Option A. Kolom salah +
+            // enum invalid + field tidak diisi. Sekarang pakai key (user_id,
+            // event_id) + field lengkap + checkin_method valid.
             Attendance::firstOrCreate(
+                ['user_id' => $user->id, 'event_id' => $event->id],
                 [
-                    'event_registration_id' => $registration->id,
-                ],
-                [
-                    'checked_in_at' => now(),
-                    'check_in_method' => 'excel_import',
+                    'registration_id' => $registration->id,
+                    'role_type'       => 'peserta',
+                    'attendance_type' => 'absensi_manual_admin',
+                    'checkin_method'  => 'manual_admin',
+                    'checked_in_at'   => now(),
+                    'notes'           => 'Import Kehadiran via Excel/CSV (Admin)',
                 ]
             );
 
