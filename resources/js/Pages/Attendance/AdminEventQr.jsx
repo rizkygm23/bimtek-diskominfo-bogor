@@ -239,7 +239,7 @@ export default function AdminEventQr({ event, session: initialSession, attendanc
           </div>
         </div>
 
-        {/* QR CODE PROJECTOR SCREEN CARD */}
+        {/* TODO: flatten hero — see PageHeader.jsx (QR projector card: needs solid bg-slate-900 for print contrast, not gradient) */}
         <div
           ref={qrContainerRef}
           className={`bg-gradient-to-b from-blue-950 via-slate-900 to-blue-900 text-white border-4 border-amber-400 rounded-3xl p-6 md:p-10 shadow-2xl text-center space-y-6 print:border-slate-900 print:text-slate-900 print:bg-white transition-all relative overflow-hidden ${
@@ -315,8 +315,9 @@ export default function AdminEventQr({ event, session: initialSession, attendanc
                 </div>
 
                 {/* PROGRESS BAR */}
+                {/* TODO: flatten hero — see PageHeader.jsx (progress bar: bg-blue-900, not rainbow gradient) */}
                 <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden border border-slate-200">
-                  <div 
+                  <div
                     className="h-full bg-gradient-to-r from-emerald-500 via-amber-400 to-blue-600 transition-all duration-1000 ease-linear rounded-full"
                     style={{ width: `${progressPercent}%` }}
                   ></div>

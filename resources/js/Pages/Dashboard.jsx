@@ -119,7 +119,7 @@ export default function Dashboard({ stats, myRegistrations = [], myTeachingSched
     {
       name: 'Instagram Diskominfo Kab. Bogor',
       url: 'https://www.instagram.com/diskominfo.bogorkab',
-      color: 'bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 text-white hover:opacity-95',
+      color: 'bg-rose-600 text-white hover:bg-rose-700',
       icon: InstagramIcon,
     },
     {
@@ -143,23 +143,20 @@ export default function Dashboard({ stats, myRegistrations = [], myTeachingSched
         {/* ========================================================================= */}
         {/* TOP HERO BANNER - BOGOR KABUPATEN OFFICIAL BRANDING                      */}
         {/* ========================================================================= */}
-        <div className="relative overflow-hidden rounded-3xl bg-blue-950 bg-gradient-to-r from-blue-950 via-blue-900 to-slate-900 text-white shadow-xl border border-blue-800/50">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,var(--tw-gradient-stops))] from-amber-400/20 via-transparent to-transparent pointer-events-none"></div>
-          <div className="absolute -bottom-10 -right-10 w-72 h-72 bg-blue-600/20 rounded-full blur-3xl pointer-events-none"></div>
-
-          <div className="relative p-6 sm:p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="relative bg-white border border-slate-200 rounded-lg overflow-hidden">
+          <div className="p-6 sm:p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="space-y-3 text-center md:text-left">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-900/80 backdrop-blur-md border border-blue-700/50 text-amber-300 text-xs font-black uppercase tracking-wider shadow-xs">
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <div className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-blue-900">
+                <Sparkles className="w-3.5 h-3.5" />
                 <span>Sistem Informasi Manajemen BIMTEK Diskominfo</span>
               </div>
 
               <div>
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-white drop-shadow-xs">
-                  Selamat Datang, <span className="text-amber-400">{user.name}</span>
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-slate-900">
+                  Selamat Datang, <span className="text-blue-900">{user.name}</span>
                 </h1>
-                <p className="text-xs sm:text-sm text-blue-100 font-semibold mt-1 max-w-2xl leading-relaxed">
-                  {isAdmin 
+                <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1 max-w-2xl leading-relaxed">
+                  {isAdmin
                     ? 'Panel Administrator Pengelolaan Kegiatan, Verifikasi Administrasi, & Pelaporan Resmi.'
                     : isSpeaker
                     ? 'Portal Narasumber / Pembicara Bimbingan Teknis Kabupaten Bogor.'
@@ -171,7 +168,7 @@ export default function Dashboard({ stats, myRegistrations = [], myTeachingSched
               <div className="pt-2 flex flex-wrap items-center justify-center md:justify-start gap-2.5">
                 <Link
                   href="/events"
-                  className="px-4 py-2.5 rounded-xl bg-amber-400 text-blue-950 text-xs font-black flex items-center gap-1.5 hover:bg-amber-300 transition-all shadow-md active:scale-95 cursor-pointer"
+                  className="px-4 py-2.5 rounded-lg bg-amber-400 text-slate-900 text-xs font-bold flex items-center gap-1.5 hover:bg-amber-300 transition-colors active:scale-95 cursor-pointer"
                 >
                   <Calendar className="w-4 h-4" />
                   <span>Katalog BIMTEK</span>
@@ -179,40 +176,40 @@ export default function Dashboard({ stats, myRegistrations = [], myTeachingSched
 
                 <Link
                   href="/attendance/scan"
-                  className="px-4 py-2.5 rounded-xl bg-blue-800/80 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 backdrop-blur-md border border-blue-600/50 transition-all active:scale-95 cursor-pointer shadow-xs"
+                  className="px-4 py-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-900 text-xs font-bold flex items-center gap-1.5 border border-slate-200 transition-colors active:scale-95 cursor-pointer"
                 >
-                  <QrCode className="w-4 h-4 text-amber-300" />
+                  <QrCode className="w-4 h-4 text-slate-500" />
                   <span>Presensi Hari-H</span>
                 </Link>
 
                 {isAdmin ? (
                   <Link
                     href="/admin/reports/participants"
-                    className="px-4 py-2.5 rounded-xl bg-blue-800/80 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 backdrop-blur-md border border-blue-600/50 transition-all active:scale-95 cursor-pointer shadow-xs"
+                    className="px-4 py-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-900 text-xs font-bold flex items-center gap-1.5 border border-slate-200 transition-colors active:scale-95 cursor-pointer"
                   >
-                    <FileText className="w-4 h-4 text-amber-300" />
+                    <FileText className="w-4 h-4 text-slate-500" />
                     <span>Pusat Laporan</span>
                   </Link>
                 ) : (
                   <Link
                     href="/my-certificates"
-                    className="px-4 py-2.5 rounded-xl bg-blue-800/80 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 backdrop-blur-md border border-blue-600/50 transition-all active:scale-95 cursor-pointer shadow-xs"
+                    className="px-4 py-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-900 text-xs font-bold flex items-center gap-1.5 border border-slate-200 transition-colors active:scale-95 cursor-pointer"
                   >
-                    <Award className="w-4 h-4 text-amber-300" />
+                    <Award className="w-4 h-4 text-slate-500" />
                     <span>Sertifikat Saya</span>
                   </Link>
                 )}
               </div>
             </div>
 
-            {/* STATS OVERVIEW WIDGET */}
-            <div className="w-full md:w-80 bg-blue-900/60 backdrop-blur-md border border-blue-700/50 p-5 rounded-2xl space-y-3 text-xs shrink-0 shadow-lg">
-              <div className="font-extrabold text-amber-300 border-b border-blue-800 pb-2 uppercase text-[10px] tracking-wider flex items-center justify-between">
+            {/* STATS OVERVIEW WIDGET — flat */}
+            <div className="w-full md:w-80 bg-slate-50 border border-slate-200 p-5 rounded-lg space-y-3 text-xs shrink-0">
+              <div className="font-bold text-slate-900 border-b border-slate-200 pb-2 uppercase text-[10px] tracking-wider flex items-center justify-between">
                 <span className="flex items-center gap-1.5">
                   <Award className="w-3.5 h-3.5" />
                   <span>Ringkasan Akun</span>
                 </span>
-                <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-400 text-blue-950 uppercase">
+                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-blue-900 text-white uppercase">
                   {user.role}
                 </span>
               </div>
@@ -220,38 +217,38 @@ export default function Dashboard({ stats, myRegistrations = [], myTeachingSched
               {isAdmin ? (
                 <div className="space-y-2">
                   <div className="flex justify-between items-center py-1">
-                    <span className="text-blue-100">Total BIMTEK:</span>
-                    <strong className="text-white font-mono font-bold">{liveStats?.total_events ?? 0} Kegiatan</strong>
+                    <span className="text-slate-500">Total BIMTEK:</span>
+                    <strong className="text-slate-900 font-mono font-bold">{liveStats?.total_events ?? 0} Kegiatan</strong>
                   </div>
                   <div className="flex justify-between items-center py-1">
-                    <span className="text-blue-100">Peserta Terdaftar:</span>
-                    <strong className="text-emerald-300 font-mono font-bold">{liveStats?.total_participants ?? 0} Orang</strong>
+                    <span className="text-slate-500">Peserta Terdaftar:</span>
+                    <strong className="text-slate-900 font-mono font-bold">{liveStats?.total_participants ?? 0} Orang</strong>
                   </div>
                   <div className="flex justify-between items-center py-1">
-                    <span className="text-blue-100">Presensi Hari Ini:</span>
-                    <strong className="text-amber-300 font-mono font-bold">{liveStats?.today_attendances ?? 0} Hadir</strong>
+                    <span className="text-slate-500">Presensi Hari Ini:</span>
+                    <strong className="text-slate-900 font-mono font-bold">{liveStats?.today_attendances ?? 0} Hadir</strong>
                   </div>
                 </div>
               ) : isSpeaker ? (
                 <div className="space-y-2">
                   <div className="flex justify-between items-center py-1">
-                    <span className="text-blue-100">Penugasan Sesi:</span>
-                    <strong className="text-amber-300 font-mono font-bold">{myTeachingSchedule?.length ?? 0} BIMTEK</strong>
+                    <span className="text-slate-500">Penugasan Sesi:</span>
+                    <strong className="text-slate-900 font-mono font-bold">{myTeachingSchedule?.length ?? 0} BIMTEK</strong>
                   </div>
                   <div className="flex justify-between items-center py-1">
-                    <span className="text-blue-100">Sertifikat Narsum:</span>
-                    <strong className="text-white font-mono font-bold">Tersedia</strong>
+                    <span className="text-slate-500">Sertifikat Narsum:</span>
+                    <strong className="text-slate-900 font-mono font-bold">Tersedia</strong>
                   </div>
                 </div>
               ) : (
                 <div className="space-y-2">
                   <div className="flex justify-between items-center py-1">
-                    <span className="text-blue-100">BIMTEK Diikuti:</span>
-                    <strong className="text-white font-mono font-bold">{myRegistrations?.length ?? 0} Kegiatan</strong>
+                    <span className="text-slate-500">BIMTEK Diikuti:</span>
+                    <strong className="text-slate-900 font-mono font-bold">{myRegistrations?.length ?? 0} Kegiatan</strong>
                   </div>
                   <div className="flex justify-between items-center py-1">
-                    <span className="text-blue-100">Status Akun:</span>
-                    <strong className="text-emerald-300 font-bold">Aktif</strong>
+                    <span className="text-slate-500">Status Akun:</span>
+                    <strong className="text-emerald-700 font-bold">Aktif</strong>
                   </div>
                 </div>
               )}

@@ -398,7 +398,8 @@ export default function EventHistory({ eventsHistory = [] }) {
                       <span className="text-blue-950 font-black">{ev.total_attended} / {ev.total_registrations} Hadir ({ev.attendance_percentage}%)</span>
                     </div>
                     <div className="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
-                      <div 
+                      {/* TODO: flatten hero — see PageHeader.jsx (progress bar) */}
+                      <div
                         className="h-full bg-gradient-to-r from-blue-900 to-emerald-600 transition-all duration-500"
                         style={{ width: `${Math.min(ev.attendance_percentage, 100)}%` }}
                       ></div>

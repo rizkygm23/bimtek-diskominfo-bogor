@@ -230,19 +230,43 @@ export default function NavbarPublic() {
 
       {/* MOBILE DRAWER */}
       {mobileOpen && (
-        <div className="lg:hidden bg-white border-b border-slate-200 p-4 space-y-2 text-slate-900 shadow-xl font-medium text-xs">
+        <div className="lg:hidden bg-white border-b border-slate-200 p-4 space-y-1 text-slate-900 shadow-sm font-medium text-xs">
           {user && (
-            <div className="p-2 bg-emerald-50 rounded-xl border border-emerald-200 mb-3 text-center">
-              <span className="text-[10px] font-black text-emerald-800 uppercase">✓ Masuk Sebagai: Peserta BIMTEK</span>
+            <div className="p-2 bg-emerald-50 rounded-lg border border-emerald-200 mb-3 text-center">
+              <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wide">Masuk Sebagai: Peserta BIMTEK</span>
             </div>
           )}
 
-          <Link href="/dashboard" className="block px-3 py-2 rounded-xl hover:bg-slate-50 font-bold">🏠 Beranda</Link>
-          <Link href="/events" className="block px-3 py-2 rounded-xl hover:bg-slate-50">📅 Katalog BIMTEK</Link>
-          {user && <Link href="/attendance/scan" className="block px-3 py-2 rounded-xl hover:bg-slate-50">📷 Presensi Hari-H</Link>}
-          <Link href="/event-history" className="block px-3 py-2 rounded-xl hover:bg-slate-50">📜 Riwayat BIMTEK</Link>
-          {user && <Link href="/my-certificates" className="block px-3 py-2 rounded-xl hover:bg-slate-50">🏆 Sertifikat Saya</Link>}
-          {user && <Link href="/profile" className="block px-3 py-2 rounded-xl hover:bg-slate-50 font-bold text-blue-900">👤 Profil & Rekening BJB</Link>}
+          {/* Flat drawer — lucide icons, no emoji. Section labels for grouping. */}
+          <p className="px-3 pt-1 pb-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400">Utama</p>
+          <Link href="/dashboard" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-50 font-bold text-slate-900">
+            <LayoutDashboard className="w-4 h-4 text-slate-400" />
+            <span>Beranda</span>
+          </Link>
+          <Link href="/events" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-50 text-slate-700">
+            <Calendar className="w-4 h-4 text-slate-400" />
+            <span>Katalog BIMTEK</span>
+          </Link>
+
+          <p className="px-3 pt-2 pb-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400">Kegiatan</p>
+          {user && <Link href="/attendance/scan" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-50 text-slate-700">
+            <Camera className="w-4 h-4 text-slate-400" />
+            <span>Presensi Hari-H</span>
+          </Link>}
+          <Link href="/event-history" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-50 text-slate-700">
+            <History className="w-4 h-4 text-slate-400" />
+            <span>Riwayat BIMTEK</span>
+          </Link>
+          {user && <Link href="/my-certificates" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-50 text-slate-700">
+            <Award className="w-4 h-4 text-slate-400" />
+            <span>Sertifikat Saya</span>
+          </Link>}
+
+          <p className="px-3 pt-2 pb-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400">Akun</p>
+          {user && <Link href="/profile" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-50 font-bold text-blue-900">
+            <User className="w-4 h-4 text-slate-400" />
+            <span>Profil & Rekening BJB</span>
+          </Link>}
 
           {user && (
             <button onClick={handleLogout} className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-rose-600 bg-rose-50 border border-rose-200 mt-2 font-bold">

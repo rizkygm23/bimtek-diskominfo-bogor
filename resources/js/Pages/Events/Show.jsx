@@ -214,7 +214,8 @@ export default function Show({ event, userRegistration, userSpeakerAssignment })
           <div className="space-y-1">
             <p className="text-xs font-black text-white">Mengunggah Berkas Presentasi...</p>
             <div className="w-48 bg-blue-900 rounded-full h-2 overflow-hidden border border-blue-800">
-              <div 
+              {/* TODO: flatten hero — see PageHeader.jsx (progress bar) */}
+              <div
                 className="bg-gradient-to-r from-amber-400 to-orange-500 h-full transition-all duration-150 rounded-full"
                 style={{ width: `${Math.max(uploadProgress, 15)}%` }}
               ></div>
@@ -521,6 +522,7 @@ export default function Show({ event, userRegistration, userSpeakerAssignment })
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden">
             
             {/* HEADER */}
+            {/* TODO: flatten hero — see PageHeader.jsx (callout: bg-amber-50, not gradient) */}
             <div className="p-5 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-orange-600 text-white flex items-center justify-center shadow-xs">

@@ -18,13 +18,10 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col justify-center items-center py-12 px-4 sm:px-6 lg:px-8 font-sans selection:bg-blue-600 selection:text-white relative overflow-hidden">
-      
-      {/* AMBIENT BACKGROUND GLOW */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-gradient-to-b from-blue-900/20 via-indigo-600/10 to-transparent blur-3xl pointer-events-none"></div>
+    <div className="min-h-screen bg-slate-100 flex flex-col justify-center items-center py-12 px-4 sm:px-6 lg:px-8 font-sans selection:bg-blue-900 selection:text-white">
 
       {/* MAIN LOGIN CARD */}
-      <div className="w-full max-w-md bg-white border border-slate-200/90 rounded-3xl shadow-2xl p-8 sm:p-10 space-y-6 relative z-10">
+      <div className="w-full max-w-md bg-white border border-slate-200 rounded-lg p-8 sm:p-10 space-y-6">
         
         {/* LOGO KEDINASAN HEADER */}
         <div className="flex items-center justify-center">

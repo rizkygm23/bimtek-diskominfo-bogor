@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { Head, useForm, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
-import { 
-  CreditCard, 
-  Plus, 
-  Calculator, 
-  CheckCircle, 
-  Building, 
-  FileSpreadsheet, 
-  DollarSign, 
+import PageHeader from '@/Components/PageHeader';
+import {
+  CreditCard,
+  Plus,
+  Calculator,
+  CheckCircle,
+  Building,
+  FileSpreadsheet,
+  DollarSign,
   Trash2,
   Calendar,
   User,
@@ -103,29 +104,23 @@ export default function PaymentIndex({ payments, events, recipients, taxParamete
       <Head title="Administrasi Pembayaran & Honorarium - SIM-BIMTEK" />
 
       <div className="space-y-6">
-        {/* HEADER */}
-        <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white rounded-3xl p-6 md:p-8 shadow-xl relative overflow-hidden">
-          <div className="relative z-10 space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-400/20 text-emerald-300 rounded-full text-xs font-bold border border-emerald-400/30">
-              <Calculator className="w-4 h-4" />
-              <span>Modul Keuangan Kedinasan Diskominfo</span>
-            </div>
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">Administrasi Honorarium & Uang Jalan</h1>
-            <p className="text-blue-100 text-xs md:text-sm max-w-3xl">
-              Pengelolaan rincian honorarium narasumber (perhitungan otomatis Bruto & PPh 21) dan biaya transport / uang jalan peserta secara terintegrasi langsung dengan data rekening bank terverifikasi.
-            </p>
-          </div>
-        </div>
+        {/* HEADER — flat, no gradient */}
+        <PageHeader
+          eyebrow="Modul Keuangan Kedinasan Diskominfo"
+          eyebrowIcon={Calculator}
+          title="Administrasi Honorarium & Uang Jalan"
+          description="Pengelolaan rincian honorarium narasumber (perhitungan otomatis Bruto & PPh 21) dan biaya transport / uang jalan peserta secara terintegrasi langsung dengan data rekening bank terverifikasi."
+        />
 
         {/* TOOLBAR CONTROLS */}
-        <div className="bg-white p-4 md:p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-          
+        <div className="bg-white p-4 md:p-6 rounded-lg border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+
           {/* RECIPIENT TYPE TABS */}
-          <div className="flex items-center gap-2 p-1 bg-slate-100 rounded-xl">
+          <div className="flex items-center gap-2 p-1 bg-slate-100 rounded-lg">
             <button
               onClick={() => handleFilter('pembicara', eventId)}
               className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                type === 'pembicara' ? 'bg-blue-900 text-white shadow-xs' : 'text-slate-600 hover:text-blue-900'
+                type === 'pembicara' ? 'bg-blue-900 text-white' : 'text-slate-600 hover:text-blue-900'
               }`}
             >
               Honorarium Narasumber
@@ -133,14 +128,14 @@ export default function PaymentIndex({ payments, events, recipients, taxParamete
             <button
               onClick={() => handleFilter('peserta', eventId)}
               className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                type === 'peserta' ? 'bg-blue-900 text-white shadow-xs' : 'text-slate-600 hover:text-blue-900'
+                type === 'peserta' ? 'bg-blue-900 text-white' : 'text-slate-600 hover:text-blue-900'
               }`}
             >
               Uang Jalan / Transport Peserta
             </button>
             <a
               href={`/admin/reports/honorarium?event_id=${eventId}`}
-              className="ml-2 px-4 py-2 bg-amber-400 hover:bg-amber-300 text-slate-900 rounded-lg text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all"
+              className="ml-2 px-4 py-2 bg-amber-400 hover:bg-amber-300 text-slate-900 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all"
             >
               <FileSpreadsheet className="w-3.5 h-3.5" />
               <span>Cetak Tanda Terima Honor</span>
@@ -152,7 +147,7 @@ export default function PaymentIndex({ payments, events, recipients, taxParamete
             <select
               value={eventId}
               onChange={(e) => handleFilter(type, e.target.value)}
-              className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-900 outline-none focus:border-blue-900"
+              className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-medium text-slate-900 outline-none focus:border-blue-900"
             >
               <option value="">Semua Kegiatan BIMTEK</option>
               {events.map((ev) => (

@@ -107,6 +107,7 @@ export default function MyCertificates({ certificates = [], currentUser = {}, us
       <div className="space-y-6 font-sans pb-16">
         
         {/* HEADER HERO BANNER */}
+        {/* TODO: flatten hero — see PageHeader.jsx */}
         <div className="relative overflow-hidden rounded-3xl bg-blue-950 bg-gradient-to-r from-blue-950 via-blue-900 to-slate-900 text-white p-6 md:p-8 shadow-xl border border-blue-800/50">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,var(--tw-gradient-stops))] from-amber-400/20 via-transparent to-transparent pointer-events-none"></div>
           

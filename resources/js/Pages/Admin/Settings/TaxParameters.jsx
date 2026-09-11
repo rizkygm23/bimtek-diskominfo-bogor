@@ -47,6 +47,7 @@ export default function TaxParameters({ taxParameters }) {
 
       <div className="space-y-6">
         {/* HEADER */}
+        {/* TODO: flatten hero — see PageHeader.jsx */}
         <div className="bg-gradient-to-r from-blue-900 via-slate-900 to-indigo-900 text-white rounded-3xl p-6 md:p-8 shadow-xl">
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-400/20 text-amber-300 rounded-full text-xs font-bold border border-amber-400/30">

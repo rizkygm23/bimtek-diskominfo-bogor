@@ -161,6 +161,7 @@ export default function CertificateIndex({ events, currentEvent, adminRows = [],
       <div className="space-y-6 max-w-7xl mx-auto font-sans">
         
         {/* GOOGLE DRIVE-LIKE REPOSITORY HEADER */}
+        {/* TODO: flatten hero — see PageHeader.jsx */}
         <div className="bg-gradient-to-r from-blue-950 via-slate-900 to-indigo-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-blue-800/60 relative overflow-hidden">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
             <div className="space-y-2 max-w-2xl">

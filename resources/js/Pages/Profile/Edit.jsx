@@ -98,6 +98,7 @@ export default function Edit({ user, participantProfile, speakerProfileDetail, s
       <div className="max-w-4xl mx-auto space-y-6 font-sans">
         
         {/* PROFILE HEADER HERO CARD WITH AVATAR UPLOAD */}
+        {/* TODO: flatten hero — see PageHeader.jsx */}
         <div className="bg-gradient-to-r from-blue-950 via-blue-900 to-slate-900 text-white border-2 border-blue-800 rounded-3xl p-6 md:p-8 shadow-xl relative overflow-hidden">
           <div className="flex flex-col md:flex-row items-center md:items-start gap-6 relative z-10">
             

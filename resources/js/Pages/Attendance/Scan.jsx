@@ -463,28 +463,28 @@ export default function Scan({ events, myEvents, selectedEventId, recentAttendan
           /* ===================== PESERTA & PEMBICARA ===================== */
           <div className="space-y-6">
 
-            {/* INFO KEGIATAN YANG DIIKUTI */}
+            {/* INFO KEGIATAN YANG DIIKUTI — flat, no gradient */}
             {activeEvent ? (
-              <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white rounded-3xl p-5 md:p-6 shadow-xl">
+              <div className="bg-white border border-slate-200 rounded-lg p-5 md:p-6">
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-amber-400/20 text-amber-300 flex items-center justify-center shrink-0 border border-amber-400/30">
+                  <div className="w-12 h-12 rounded-lg bg-blue-900 text-white flex items-center justify-center shrink-0">
                     <BookOpen className="w-6 h-6" />
                   </div>
                   <div className="flex-1 space-y-1.5">
-                    <span className="text-[10px] font-black uppercase text-amber-400 tracking-widest">
+                    <span className="text-[10px] font-semibold uppercase text-blue-900 tracking-wider">
                       {user.role === 'pembicara' ? 'ANDA BERTUGAS SEBAGAI NARASUMBER PADA:' : 'KEGIATAN BIMTEK YANG DIIKUTI:'}
                     </span>
-                    <h2 className="text-lg md:text-xl font-black text-white leading-snug">{activeEvent.title}</h2>
-                    <div className="flex flex-wrap items-center gap-3 text-xs text-blue-200 pt-0.5">
-                      <span className="flex items-center gap-1 font-bold">
-                        <Calendar className="w-3.5 h-3.5 text-amber-400" />
+                    <h2 className="text-lg md:text-xl font-bold text-slate-900 leading-snug">{activeEvent.title}</h2>
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 pt-0.5">
+                      <span className="flex items-center gap-1 font-medium">
+                        <Calendar className="w-3.5 h-3.5 text-slate-400" />
                         <span>{formatDate(activeEvent.start_date)}</span>
                       </span>
                       {activeEvent.location && (
                         <>
-                          <span className="text-blue-400">•</span>
-                          <span className="flex items-center gap-1 font-bold">
-                            <MapPin className="w-3.5 h-3.5 text-emerald-400" />
+                          <span className="text-slate-300">•</span>
+                          <span className="flex items-center gap-1 font-medium">
+                            <MapPin className="w-3.5 h-3.5 text-slate-400" />
                             <span>{activeEvent.location}</span>
                           </span>
                         </>
@@ -494,7 +494,7 @@ export default function Scan({ events, myEvents, selectedEventId, recentAttendan
                     {/* Pilihan switcher event kegiatan */}
                     {availableEvents.length > 1 && (
                       <div className="pt-2 flex flex-wrap gap-1.5 items-center">
-                        <span className="text-[10px] text-blue-300 font-bold">Pilih Kegiatan Lain:</span>
+                        <span className="text-[10px] text-slate-500 font-medium">Pilih Kegiatan Lain:</span>
                         {availableEvents.map(ev => (
                           <button
                             key={ev.id}
@@ -502,8 +502,8 @@ export default function Scan({ events, myEvents, selectedEventId, recentAttendan
                             onClick={() => setActiveEventId(ev.id)}
                             className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
                               Number(activeEventId) === Number(ev.id)
-                                ? 'bg-amber-400 text-blue-950 shadow-xs'
-                                : 'bg-white/15 text-white hover:bg-white/25'
+                                ? 'bg-blue-900 text-white'
+                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                             }`}
                           >
                             {ev.title}

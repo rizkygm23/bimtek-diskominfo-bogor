@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { usePage, Link } from '@inertiajs/react';
 import NavbarPublic from '../Components/NavbarPublic';
-import NavbarSpeaker from '../Components/NavbarSpeaker';
-import NavbarAdmin from '../Components/NavbarAdmin';
+import Sidebar from '../Components/Sidebar';
+import MobileTopBar from '../Components/MobileTopBar';
 import MobileBottomNav from '../Components/MobileBottomNav';
 import { Phone, Mail, MapPin, Clock, X, CheckCircle2, AlertCircle } from 'lucide-react';
 
@@ -12,6 +12,7 @@ export default function AppLayout({ children, title }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [prayerSlide, setPrayerSlide] = useState(0);
   const [showFlash, setShowFlash] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // 5 Waktu Shalat Resmi Kabupaten Bogor
   const prayerSlides = [
@@ -48,15 +49,74 @@ export default function AppLayout({ children, title }) {
     }
   }, [flash]);
 
+  // ───────────────────────────────────────────────────────────
+  // FLASH (shared by both shells — flattened: shadow-sm rounded-lg)
+  // Repositioned to content column top-4 right-4 (not viewport top-20).
+  // ───────────────────────────────────────────────────────────
+  const flashNode = showFlash && (flash?.success || flash?.error) ? (
+    <div className="fixed top-4 right-4 z-50 max-w-md print:hidden">
+      {flash?.success && (
+        <div className="bg-emerald-800 text-white text-xs px-4 py-3 rounded-lg shadow-sm border border-emerald-600 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-300 shrink-0" />
+            <span className="font-bold">{flash.success}</span>
+          </div>
+          <button onClick={() => setShowFlash(false)} className="text-emerald-200 hover:text-white font-bold p-1">
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+      {flash?.error && (
+        <div className="bg-rose-800 text-white text-xs px-4 py-3 rounded-lg shadow-sm border border-rose-600 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-rose-300 shrink-0" />
+            <span className="font-bold">{flash.error}</span>
+          </div>
+          <button onClick={() => setShowFlash(false)} className="text-rose-200 hover:text-white font-bold p-1">
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+    </div>
+  ) : null;
+
+  // ───────────────────────────────────────────────────────────
+  // AUTH SHELL — sidebar + content column (no utility bar, no footer).
+  // Sidebar is fixed lg+ (w-64/w-16) and a drawer on mobile.
+  // ───────────────────────────────────────────────────────────
+  if (currentUser) {
+    return (
+      <div className="min-h-[100dvh] flex bg-slate-50 text-slate-900 antialiased overflow-x-hidden w-full max-w-full">
+        <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+
+        <div className="flex-1 lg:ml-64 flex flex-col min-h-[100dvh]">
+          <MobileTopBar onMenuClick={() => setSidebarOpen(true)} />
+
+          <main className="flex-1 max-w-6xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6 print:p-0 print:m-0 print:w-full print:max-w-none print:space-y-0">
+            {children}
+          </main>
+        </div>
+
+        {flashNode}
+
+        {/* MobileBottomNav — only for authenticated users (quick-access) */}
+        <MobileBottomNav />
+      </div>
+    );
+  }
+
+  // ───────────────────────────────────────────────────────────
+  // PUBLIC SHELL — utility bar + NavbarPublic + main + footer (guest)
+  // ───────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen flex flex-col font-sans bg-slate-50 text-slate-900 antialiased pb-16 lg:pb-0 overflow-x-hidden w-full max-w-full">
-      
+    <div className="min-h-[100dvh] flex flex-col font-sans bg-slate-50 text-slate-900 antialiased pb-16 lg:pb-0 overflow-x-hidden w-full max-w-full">
+
       {/* 1. TOP UTILITY BAR (E-GOVERNMENT DISKOMINFO BOGOR) */}
       <div className={`transition-all duration-300 overflow-hidden bg-slate-900 text-slate-300 border-b border-slate-800 sticky top-0 z-50 print:hidden ${
         isScrolled ? 'max-h-0 opacity-0 py-0 border-none pointer-events-none' : 'max-h-12 opacity-100 py-1.5'
       }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between text-[11px] font-medium">
-          
+
           {/* KONTAK DETAIL */}
           <div className="flex items-center gap-3.5 text-slate-400 whitespace-nowrap">
             <span className="flex items-center gap-1.5 hover:text-white transition-colors">
@@ -74,16 +134,16 @@ export default function AppLayout({ children, title }) {
           <div className="hidden lg:flex items-center gap-2 whitespace-nowrap">
             <Clock className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
             <span className="text-slate-400">Jadwal Shalat Kab. Bogor:</span>
-            
+
             <div className="relative h-5 w-44 overflow-hidden rounded-full bg-slate-800/90 border border-slate-700 px-2.5 flex items-center justify-center">
               {prayerSlides.map((slide, idx) => (
-                <div 
-                  key={slide.name} 
+                <div
+                  key={slide.name}
                   className={`absolute inset-0 flex items-center justify-center gap-1.5 transition-all duration-700 ease-in-out font-bold text-slate-200 text-[10px] ${
-                    idx === prayerSlide 
-                      ? 'translate-x-0 opacity-100' 
-                      : idx < prayerSlide 
-                        ? '-translate-x-full opacity-0' 
+                    idx === prayerSlide
+                      ? 'translate-x-0 opacity-100'
+                      : idx < prayerSlide
+                        ? '-translate-x-full opacity-0'
                         : 'translate-x-full opacity-0'
                   }`}
                 >
@@ -114,55 +174,19 @@ export default function AppLayout({ children, title }) {
         </div>
       </div>
 
-      {/* 2. CONDITIONAL MAIN NAVBAR BASED ON ROLE */}
+      {/* 2. PUBLIC NAVBAR (guest shell only) */}
       <div className="print:hidden">
-        {currentUser?.role === 'admin' ? (
-          <NavbarAdmin isScrolled={isScrolled} />
-        ) : currentUser?.role === 'pembicara' ? (
-          <NavbarSpeaker isScrolled={isScrolled} />
-        ) : (
-          <NavbarPublic isScrolled={isScrolled} />
-        )}
+        <NavbarPublic isScrolled={isScrolled} />
       </div>
 
-      {/* 3. ELEGANT FLOATING FLASH NOTIFICATIONS */}
-      {showFlash && flash?.success && (
-        <div className="fixed top-20 right-4 z-50 max-w-md animate-in slide-in-from-top-4 fade-in-50 print:hidden">
-          <div className="bg-emerald-800 text-white text-xs px-4 py-3 rounded-2xl shadow-xl border border-emerald-600 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-300 shrink-0" />
-              <span className="font-bold">{flash.success}</span>
-            </div>
-            <button onClick={() => setShowFlash(false)} className="text-emerald-200 hover:text-white font-bold p-1">
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {showFlash && flash?.error && (
-        <div className="fixed top-20 right-4 z-50 max-w-md animate-in slide-in-from-top-4 fade-in-50 print:hidden">
-          <div className="bg-rose-800 text-white text-xs px-4 py-3 rounded-2xl shadow-xl border border-rose-600 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-rose-300 shrink-0" />
-              <span className="font-bold">{flash.error}</span>
-            </div>
-            <button onClick={() => setShowFlash(false)} className="text-rose-200 hover:text-white font-bold p-1">
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </div>
-      )}
+      {flashNode}
 
       {/* 4. MAIN CONTENT CONTAINER */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-8 print:p-0 print:m-0 print:w-full print:max-w-none print:space-y-0">
         {children}
       </main>
 
-      {/* 5. OFFICIAL FOOTER — hanya tampil untuk pengunjung yang BELUM login.
-          Saat user sudah login (admin/peserta/pembicara), footer disembunyikan
-          agar dashboard & halaman fungsional tampil clean tanpa elemen publik. */}
-      {!currentUser && (
+      {/* 5. OFFICIAL FOOTER — guest-only (auth users see no footer) */}
       <footer className="bg-[#0f2942] text-white border-t-4 border-blue-600 print:hidden">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 py-10 grid grid-cols-1 md:grid-cols-3 gap-8 text-xs">
 
@@ -221,10 +245,6 @@ export default function AppLayout({ children, title }) {
           </div>
         </div>
       </footer>
-      )}
-
-      {/* MOBILE NATIVE BOTTOM NAVIGATION */}
-      <MobileBottomNav />
 
     </div>
   );
