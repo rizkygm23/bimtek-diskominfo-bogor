@@ -59,10 +59,24 @@ export default function Scan({ events, myEvents, selectedEventId, recentAttendan
       notes: note,
     }, {
       preserveScroll: true,
+      preserveState: false,
       onFinish: () => {
         setManualProcessing(prev => ({ ...prev, [userId]: false }));
         setManualNotes(prev => ({ ...prev, [userId]: '' }));
       },
+    });
+  };
+
+  // Switch event: re-fetch server data dengan event_id baru.
+  // Controller scanView baca dari $request->query('event_id'), jadi kirim GET.
+  // Untuk admin: re-fetch recentAttendances + eventRegistrations.
+  // Untuk peserta/pembicara: re-fetch myAttendances + gatekeeperStatus.
+  const handleEventSwitch = (newEventId) => {
+    setActiveEventId(newEventId);
+    router.get('/attendance/scan', { event_id: newEventId }, {
+      preserveState: true,
+      preserveScroll: true,
+      replace: true,
     });
   };
 
@@ -163,8 +177,10 @@ export default function Scan({ events, myEvents, selectedEventId, recentAttendan
       token: qrData,
       method: 'qr_scan',
     }, {
-      onFinish: () => { 
-        processingRef.current = false; 
+      preserveScroll: true,
+      preserveState: false,
+      onFinish: () => {
+        processingRef.current = false;
         setScannedSuccess(false);
       },
     });
@@ -230,7 +246,7 @@ export default function Scan({ events, myEvents, selectedEventId, recentAttendan
                 <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">Kegiatan BIMTEK:</label>
                 <select
                   value={activeEventId}
-                  onChange={(e) => setActiveEventId(e.target.value)}
+                  onChange={(e) => handleEventSwitch(e.target.value)}
                   className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-extrabold text-slate-900"
                 >
                   {events.map((ev) => (
@@ -499,7 +515,7 @@ export default function Scan({ events, myEvents, selectedEventId, recentAttendan
                           <button
                             key={ev.id}
                             type="button"
-                            onClick={() => setActiveEventId(ev.id)}
+                            onClick={() => handleEventSwitch(ev.id)}
                             className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
                               Number(activeEventId) === Number(ev.id)
                                 ? 'bg-blue-900 text-white'

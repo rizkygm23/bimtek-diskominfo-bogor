@@ -21,7 +21,15 @@ class AttendanceController extends Controller
     {
         $user = auth()->user();
 
-        $allEvents = BimtekEvent::where('status', '!=', 'completed')
+        // Event yang belum selesai: end_date >= sekarang, ATAU end_date null
+        // dan status DB bukan 'completed' (admin paksa selesai).
+        $allEvents = BimtekEvent::where(function ($q) {
+            $q->where('end_date', '>=', now())
+              ->orWhere(function ($q2) {
+                  $q2->whereNull('end_date')
+                     ->where('status', '!=', 'completed');
+              });
+        })
             ->orderBy('start_date', 'desc')
             ->get();
 

@@ -403,9 +403,11 @@ export default function Dashboard({ stats, myRegistrations = [], myTeachingSched
                     <div key={ev.id} className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
                       <div className="flex items-start justify-between gap-2">
                         <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${
-                          ev.status === 'open' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'
+                          (ev.computed_status || ev.status) === 'open' ? 'bg-emerald-100 text-emerald-800'
+                          : (ev.computed_status || ev.status) === 'completed' ? 'bg-slate-100 text-slate-600'
+                          : 'bg-blue-100 text-blue-800'
                         }`}>
-                          {ev.status}
+                          {(ev.computed_status || ev.status)}
                         </span>
                         <span className="text-[11px] font-bold text-slate-500">{ev.registrations_count || 0} Pendaftar</span>
                       </div>

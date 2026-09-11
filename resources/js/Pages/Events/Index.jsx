@@ -212,13 +212,13 @@ export default function Index({ events, registeredEventIds = [] }) {
                 {/* CARD HEADER */}
                 <div className="flex items-center justify-between gap-2 mb-3">
                   <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wide border ${
-                    item.status === 'open' 
-                      ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
-                      : item.status === 'ongoing'
+                    (item.computed_status || item.status) === 'open'
+                      ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                      : (item.computed_status || item.status) === 'ongoing'
                       ? 'bg-blue-50 text-blue-900 border-blue-200'
                       : 'bg-slate-100 text-slate-700 border-slate-200'
                   }`}>
-                    Status: {item.status}
+                    Status: {(item.computed_status || item.status)}
                   </span>
 
                   {/* ADMIN EDIT / DELETE */}

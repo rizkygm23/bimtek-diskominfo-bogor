@@ -304,6 +304,7 @@ class BimtekEventController extends Controller
                 'location' => $ev->location,
                 'quota' => $ev->quota,
                 'status' => $ev->status,
+                'computed_status' => $ev->computed_status,
                 'total_registrations' => $totalRegistrations,
                 'total_attended' => $totalAttended,
                 'attendance_percentage' => $totalRegistrations > 0 ? round(($totalAttended / $totalRegistrations) * 100, 1) : 0,

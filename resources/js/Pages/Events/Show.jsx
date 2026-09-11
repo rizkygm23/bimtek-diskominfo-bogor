@@ -249,7 +249,7 @@ export default function Show({ event, userRegistration, userSpeakerAssignment })
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 md:p-8 shadow-xs space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <span className="px-3 py-1 rounded-md text-xs font-extrabold uppercase bg-blue-50 text-blue-900 border border-blue-200 dark:bg-blue-950 dark:text-amber-400 dark:border-blue-800">
-              Status: {event.status}
+              Status: {(event.computed_status || event.status)}
             </span>
 
             <div className="text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center gap-2">

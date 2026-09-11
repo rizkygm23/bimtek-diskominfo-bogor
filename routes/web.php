@@ -47,7 +47,15 @@ Route::middleware('auth')->group(function () {
         if ($user->role === 'admin') {
             $stats = [
                 'total_events' => \App\Models\BimtekEvent::count(),
-                'active_events' => \App\Models\BimtekEvent::whereIn('status', ['open', 'ongoing'])->count(),
+                'active_events' => \App\Models\BimtekEvent::where(function ($q) {
+                    // Event aktif = belum selesai (end_date >= sekarang) ATAU
+                    // status DB ongoing (sedang berjalan tanpa end_date jelas).
+                    $q->where('end_date', '>=', now())
+                      ->orWhere(function ($q2) {
+                          $q2->whereNull('end_date')
+                             ->whereIn('status', ['open', 'ongoing']);
+                      });
+                })->count(),
                 'total_participants' => \App\Models\User::where('role', 'user')->count(),
                 'total_speakers' => \App\Models\Speaker::count() ?: \App\Models\User::where('role', 'pembicara')->count(),
                 'total_registrations' => \App\Models\EventRegistration::whereHas('user', function($q) {

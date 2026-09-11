@@ -363,11 +363,11 @@ export default function EventHistory({ eventsHistory = [] }) {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between gap-2">
                       <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border ${
-                        ev.status === 'completed' 
-                          ? 'bg-slate-200 text-slate-800 border-slate-300' 
+                        (ev.computed_status || ev.status) === 'completed'
+                          ? 'bg-slate-200 text-slate-800 border-slate-300'
                           : 'bg-emerald-100 text-emerald-800 border-emerald-300'
                       }`}>
-                        {ev.status === 'completed' ? '✓ SELESAI' : '• BERLANGSUNG'}
+                        {(ev.computed_status || ev.status) === 'completed' ? '✓ SELESAI' : '• BERLANGSUNG'}
                       </span>
                       <span className="text-[11px] font-mono text-slate-500 font-bold">
                         Kuota: {ev.quota} Orang
