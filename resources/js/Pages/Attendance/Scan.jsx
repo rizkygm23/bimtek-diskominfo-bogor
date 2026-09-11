@@ -234,9 +234,17 @@ export default function Scan({ events, myEvents, selectedEventId, recentAttendan
     if (!file) return;
 
     setCameraError(null);
+    let html5QrCode = null;
     try {
       const { Html5Qrcode } = await import('html5-qrcode');
-      const html5QrCode = new Html5Qrcode("qr-reader-container");
+      // PENTING: gunakan container khusus file-scan yang SELALU ada di DOM
+      // dengan dimensi nyata (offscreen, bukan display:none). Sebelumnya pakai
+      // "qr-reader-container" yang ber-class hidden (display:none) saat kamera
+      // mati — html5-qrcode bikin <img>+<canvas> internal di container itu,
+      // tapi browser report dimensi 0 untuk elemen di display:none → decode
+      // gagal → "QR Code tidak terdeteksi". Itu sebabnya foto tidak pernah
+      // berhasil padahal live kamera (elemen sama tapi visible) aman.
+      html5QrCode = new Html5Qrcode("qr-file-scan-container");
       const decodedText = await html5QrCode.scanFile(file, false);
       playBeep();
       if (typeof navigator !== 'undefined' && navigator.vibrate) {
@@ -244,7 +252,17 @@ export default function Scan({ events, myEvents, selectedEventId, recentAttendan
       }
       handleQrCheckin(decodedText);
     } catch (err) {
-      setCameraError('QR Code tidak terdeteksi pada foto tersebut. Pastikan foto QR Code tegak dan jelas. Jika tetap bermasalah, mohon hubungi Admin untuk dicatatkan presensi secara manual.');
+      setCameraError('QR Code tidak terdeteksi pada foto tersebut. Pastikan foto QR Code tegak, fokus, dan kontras tinggi. Anda bisa ambil foto ulang, atau gunakan tombol "Live Kamera HP" di samping. Jika tetap bermasalah, mohon hubungi Admin untuk dicatatkan presensi secara manual.');
+    } finally {
+      // Cleanup: bersihkan <img>/<canvas> internal yang scanFile tinggalkan di
+      // container, supaya tidak menumpuk kalau user scan foto berkali-kali.
+      if (html5QrCode) {
+        try { await html5QrCode.clear(); } catch {}
+        const c = document.getElementById("qr-file-scan-container");
+        if (c) c.innerHTML = '';
+      }
+      // Reset input value supaya event change tetap fire untuk file yang sama.
+      if (e.target) e.target.value = '';
     }
   };
 
@@ -253,6 +271,20 @@ export default function Scan({ events, myEvents, selectedEventId, recentAttendan
     return new Date(dateStr).toLocaleDateString('id-ID', {
       weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
     });
+  };
+
+  // Format timestamp aman dari format MySQL "YYYY-MM-DD HH:MM:SS" (spasi, bukan
+  // T). Sebagian browser (WebKit/iOS) menganggap itu Invalid Date. Normalisasi
+  // ke ISO 8601 dulu sebelum new Date(). Plus guard null/undefined.
+  const formatTimestamp = (ts) => {
+    if (!ts) return '-';
+    try {
+      const iso = String(ts).includes('T') ? ts : String(ts).replace(' ', 'T');
+      const d = new Date(iso);
+      return isNaN(d.getTime()) ? '-' : d.toLocaleString('id-ID');
+    } catch {
+      return '-';
+    }
   };
 
   // Cek apakah sudah presensi untuk event aktif
@@ -512,7 +544,7 @@ export default function Scan({ events, myEvents, selectedEventId, recentAttendan
                             </span>
                           </td>
                           <td className="p-3 text-slate-600 capitalize">{att.checkin_method?.replace('_', ' ') || 'QR Scan'}</td>
-                          <td className="p-3 font-mono text-slate-500">{new Date(att.checked_in_at).toLocaleString('id-ID')}</td>
+                          <td className="p-3 font-mono text-slate-500">{formatTimestamp(att.checked_in_at)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -713,12 +745,15 @@ export default function Scan({ events, myEvents, selectedEventId, recentAttendan
                                 <span>Live Kamera HP</span>
                               </button>
 
-                              {/* Hidden file input for direct photo / gallery QR scan (works on HTTP!) */}
+                              {/* Hidden file input for QR scan from photo (works on HTTP!).
+                                  Tanpa atribut `capture` supaya user BISA PILIH
+                                  dari galeri (tidak dipaksa ambil foto baru). Sebelumnya
+                                  capture="environment" memaksa buka kamera, blokir
+                                  pilih foto existing — itu membatasi user. */}
                               <input
                                 ref={fileInputRef}
                                 type="file"
                                 accept="image/*"
-                                capture="environment"
                                 onChange={handleImageFileScan}
                                 className="hidden"
                               />
@@ -775,6 +810,20 @@ export default function Scan({ events, myEvents, selectedEventId, recentAttendan
                           Jika kamera tidak berfungsi atau Anda mengalami kendala saat absensi pada kegiatan <strong>"{activeEvent.title}"</strong>, mohon hubungi petugas Admin (Panitia) untuk dicatatkan presensi secara manual. Presensi mandiri <strong>wajib</strong> via scan QR Code resmi yang ditayangkan di layar proyektor.
                         </p>
                       </div>
+
+                      {/*
+                        Container offscreen KHUSUS file-scan (Foto QR Code).
+                        Dipakai handleImageFileScan untuk bikin Html5Qrcode + scanFile().
+                        HARUS punya dimensi nyata — JANGAN display:none (kalau
+                        display:none, html5-qrcode report 0x0 → decode gagal).
+                        Offscreen pakai absolute -left-[9999px] dengan width/height
+                        eksplisit. Tidak terlihat user tapi dimensi valid.
+                      */}
+                      <div
+                        id="qr-file-scan-container"
+                        aria-hidden="true"
+                        className="absolute -left-[9999px] top-0 w-[300px] h-[300px] overflow-hidden pointer-events-none"
+                      ></div>
                     </div>
                   )}
                 </div>
@@ -800,7 +849,7 @@ export default function Scan({ events, myEvents, selectedEventId, recentAttendan
                               ✓ HADIR
                             </span>
                             <span className="text-[10px] font-mono font-bold text-slate-500">
-                              {new Date(att.checked_in_at).toLocaleString('id-ID')}
+                              {formatTimestamp(att.checked_in_at)}
                             </span>
                           </div>
                           <p className="text-xs font-extrabold text-slate-900">
