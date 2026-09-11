@@ -140,11 +140,15 @@ export default function RegisterForm({
                   <label className="block text-xs font-bold text-slate-700">NIP / NIK KTP *</label>
                   <input
                     type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     required
+                    minLength={16}
+                    maxLength={18}
                     value={data.nip_nik}
-                    onChange={(e) => setData('nip_nik', e.target.value)}
+                    onChange={(e) => setData('nip_nik', e.target.value.replace(/[^0-9]/g, ''))}
                     className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:outline-none focus:border-blue-900"
-                    placeholder="19750812 200103 1 002"
+                    placeholder="19750812200301002"
                   />
                   {errors.nip_nik && <p className="text-xs text-rose-600 font-bold">{errors.nip_nik}</p>}
                 </div>
@@ -167,10 +171,13 @@ export default function RegisterForm({
                 <div className="space-y-1.5">
                   <label className="block text-xs font-bold text-slate-700">No. WhatsApp / Telepon *</label>
                   <input
-                    type="text"
+                    type="tel"
+                    inputMode="numeric"
+                    pattern="08[0-9]{7,12}"
                     required
                     value={data.no_hp}
-                    onChange={(e) => setData('no_hp', e.target.value)}
+                    onChange={(e) => setData('no_hp', e.target.value.replace(/[^0-9]/g, ''))}
+                    maxLength={14}
                     className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:outline-none focus:border-blue-900"
                     placeholder="085219752107"
                   />
@@ -224,9 +231,12 @@ export default function RegisterForm({
                   <label className="block text-xs font-bold text-slate-700">Nomor Rekening Bank *</label>
                   <input
                     type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     required
                     value={data.account_number}
-                    onChange={(e) => setData('account_number', e.target.value)}
+                    onChange={(e) => setData('account_number', e.target.value.replace(/[^0-9]/g, ''))}
+                    maxLength={24}
                     className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono font-bold text-slate-900 focus:bg-white focus:outline-none focus:border-blue-900"
                     placeholder="0012345678901"
                   />
@@ -443,10 +453,13 @@ export default function RegisterForm({
               <div className="space-y-1.5">
                 <label className="block text-xs font-bold text-slate-700">No. WhatsApp / HP Aktif *</label>
                 <input
-                  type="text"
+                  type="tel"
+                  inputMode="numeric"
+                  pattern="08[0-9]{7,12}"
                   required
                   value={data.no_hp}
-                  onChange={(e) => setData('no_hp', e.target.value)}
+                  onChange={(e) => setData('no_hp', e.target.value.replace(/[^0-9]/g, ''))}
+                  maxLength={14}
                   className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:outline-none focus:border-blue-900"
                   placeholder="081234567890"
                 />
@@ -494,10 +507,13 @@ export default function RegisterForm({
                 <label className="block text-xs font-bold text-slate-700">NIK (Nomor Induk Kependudukan - 16 Digit) *</label>
                 <input
                   type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   required
+                  minLength={16}
                   maxLength={16}
                   value={data.nik}
-                  onChange={(e) => setData('nik', e.target.value)}
+                  onChange={(e) => setData('nik', e.target.value.replace(/[^0-9]/g, ''))}
                   className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono font-bold text-slate-900 focus:bg-white focus:outline-none focus:border-blue-900"
                   placeholder="3201012345678901"
                 />
@@ -567,9 +583,12 @@ export default function RegisterForm({
                 <label className="block text-xs font-bold text-slate-700">Nomor Rekening *</label>
                 <input
                   type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   required
                   value={data.account_number}
-                  onChange={(e) => setData('account_number', e.target.value)}
+                  onChange={(e) => setData('account_number', e.target.value.replace(/[^0-9]/g, ''))}
+                  maxLength={24}
                   className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono font-bold text-slate-900 focus:bg-white focus:outline-none focus:border-blue-900"
                   placeholder="0019283746101"
                 />

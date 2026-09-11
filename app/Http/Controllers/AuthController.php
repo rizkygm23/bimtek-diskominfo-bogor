@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\Speaker;
 use App\Models\ParticipantProfile;
 use App\Models\SpeakerProfile;
+use App\Rules\ValidIndonesianNIK;
 use Inertia\Inertia;
 
 class AuthController extends Controller
@@ -73,11 +74,14 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:6|confirmed',
-            'nip_nik' => 'nullable|string',
-            'instansi' => 'nullable|string',
-            'jabatan' => 'nullable|string',
-            'no_hp' => 'nullable|string',
-            'alamat' => 'nullable|string',
+            'nip_nik' => ['nullable', 'string', 'size:16', new ValidIndonesianNIK],
+            'instansi' => 'nullable|string|max:255',
+            'jabatan' => 'nullable|string|max:255',
+            'no_hp' => ['nullable', 'string', 'max:20', 'regex:/^08[0-9]{7,12}$/'],
+            'alamat' => 'nullable|string|max:500',
+        ], [
+            'nip_nik.size' => 'NIK harus terdiri dari 16 digit.',
+            'no_hp.regex' => 'Nomor HP harus format Indonesia (08xxxxxxxxxx).',
         ]);
 
         $user = User::create([
@@ -113,11 +117,12 @@ class AuthController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'nip_nik' => 'required|string|max:50|unique:users,nip_nik',
+            'nip_nik' => ['required', 'string', 'max:20', 'regex:/^[0-9]{16,18}$/', 'unique:users,nip_nik'],
             'password' => 'required|string|min:6|confirmed',
         ], [
             'name.required' => 'Nama Pembicara wajib diisi.',
             'nip_nik.required' => 'NIP / NIK KTP wajib diisi.',
+            'nip_nik.regex' => 'NIP/NIK harus 16-18 digit angka.',
             'nip_nik.unique' => 'NIP / NIK KTP ini sudah terdaftar sebagai akun.',
             'password.required' => 'Password wajib diisi.',
             'password.min' => 'Password minimal 6 karakter.',

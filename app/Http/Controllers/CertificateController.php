@@ -197,9 +197,35 @@ class CertificateController extends Controller
         $registrations = EventRegistration::where('bimtek_event_id', $eventId)->with('user.participantProfile')->get();
         $eventSpeakers = EventSpeaker::where('bimtek_event_id', $eventId)->with('speaker')->get();
 
+        // Precompute nama unik vs ambigu (untuk deteksi nama ganda).
+        // NIK & kode registrasi tetap unik (match priority 1 & 2) — tidak terkena guard ini.
+        $nameToRegs = $registrations->groupBy(function ($reg) {
+            $u = $reg->user;
+            return $u ? strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $u->name)) : '';
+        })->filter(fn($group, $key) => $key !== '' && $group->count() > 0);
+        // Set nama yang ambigu (>1 pendaftar dengan nama sama persis) — name-match dilewati.
+        $ambiguousNames = $nameToRegs->filter(fn($group) => $group->count() > 1)->keys()->all();
+        $ambiguousNameWords = [];
+        // Untuk word-match: kumpulkan kata nama yang muncul di >1 pendaftar berbeda.
+        $wordToRegs = [];
+        foreach ($registrations as $reg) {
+            $u = $reg->user;
+            if (!$u) continue;
+            $words = array_filter(explode(' ', strtolower(preg_replace('/[^a-zA-Z0-9\s]/', '', $u->name))), fn($w) => strlen($w) >= 3);
+            foreach ($words as $word) {
+                $wordToRegs[$word][$reg->id] = true;
+            }
+        }
+        foreach ($wordToRegs as $word => $ids) {
+            if (count($ids) > 1) {
+                $ambiguousNameWords[] = $word;
+            }
+        }
+
         $processedFiles = [];
         $matchedCount = 0;
         $unmatchedCount = 0;
+        $ambiguousCount = 0;
 
         // 1. PROSES FILE ZIP JIKA DIUNGGAH
         if ($request->hasFile('zip_file')) {
@@ -251,6 +277,10 @@ class CertificateController extends Controller
         }
 
         // 3. AUTO-MATCHING FILES KE PESERTA & NARASUMBER DENGAN NIK / IDENTIFIER / NAMA
+        //    Prioritas: NIK (unik) -> Kode Registrasi (unik) -> Nama lengkap (dengan guard ambigu) -> Kata nama (dengan guard ambigu)
+        //    NIK & kode registrasi adalah identifier unik → selalu aman di-match.
+        //    Nama/kata nama HANYA di-match jika TIDAK ambigu (tidak ada >1 pendaftar dengan nama/kata sama).
+        //    Jika ambigu → dilewati, flag untuk sambungkan manual (jangan salah sasaran).
         foreach ($processedFiles as $item) {
             $filename = strtolower($item['original_name']);
             $cleanFilename = preg_replace('/[^a-zA-Z0-9]/', '', $filename);
@@ -258,6 +288,7 @@ class CertificateController extends Controller
             $matchedRole = 'peserta';
             $matchedRegId = null;
             $matchedSpeakerId = null;
+            $skippedDueToAmbiguity = false;
 
             // Cari kecocokan di data peserta (Utamakan NIK, lalu Registration Code, lalu Nama)
             foreach ($registrations as $reg) {
@@ -268,31 +299,39 @@ class CertificateController extends Controller
                 $regCode = strtolower($reg->registration_code);
                 $cleanName = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $u->name));
 
-                // 1. Cocokkan NIK (paling akurat)
+                // 1. Cocokkan NIK (paling akurat, identifier unik — tidak ambigu)
                 if ($nik && strlen($nik) >= 4 && Str::contains($filename, strtolower($nik))) {
                     $matchedUser = $u;
                     $matchedRegId = $reg->id;
                     break;
                 }
 
-                // 2. Cocokkan Kode Registrasi
+                // 2. Cocokkan Kode Registrasi (identifier unik — tidak ambigu)
                 if ($regCode && Str::contains($filename, $regCode)) {
                     $matchedUser = $u;
                     $matchedRegId = $reg->id;
                     break;
                 }
 
-                // 3. Cocokkan Nama Utuh (Support nama pendek seperti IRZI & UDIN - strlen >= 3)
+                // 3. Cocokkan Nama Utuh — HANYA jika nama ini TIDAK ambigu
                 if (strlen($cleanName) >= 3 && Str::contains($cleanFilename, $cleanName)) {
+                    if (in_array($cleanName, $ambiguousNames)) {
+                        $skippedDueToAmbiguity = true;
+                        continue; // jangan break — mungkin NIK/kode registrasi peserta lain cocok
+                    }
                     $matchedUser = $u;
                     $matchedRegId = $reg->id;
                     break;
                 }
 
-                // 4. Cocokkan Kata per Kata Nama Peserta (misal "Rangga" untuk "RANGGA BAGAS SETIAWAN")
+                // 4. Cocokkan Kata per Kata Nama Peserta — HANYA jika kata ini TIDAK ambigu
                 $nameWords = array_filter(explode(' ', strtolower(preg_replace('/[^a-zA-Z0-9\s]/', '', $u->name))), fn($w) => strlen($w) >= 3);
                 foreach ($nameWords as $word) {
                     if (Str::contains($cleanFilename, $word)) {
+                        if (in_array($word, $ambiguousNameWords)) {
+                            $skippedDueToAmbiguity = true;
+                            continue 2; // cek peserta berikutnya
+                        }
                         $matchedUser = $u;
                         $matchedRegId = $reg->id;
                         break 2;
@@ -302,6 +341,19 @@ class CertificateController extends Controller
 
             // Jika belum cocok, cari di data narasumber
             if (!$matchedUser) {
+                // Precompute nama/kata narasumber yang ambigu (ada di >1 narasumber)
+                $speakerNames = $eventSpeakers->map(fn($es) => $es->speaker ? strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $es->speaker->name)) : '')->filter()->all();
+                $speakerNameCounts = array_count_values($speakerNames);
+                $speakerWordMap = [];
+                foreach ($eventSpeakers as $es) {
+                    $sp = $es->speaker;
+                    if (!$sp) continue;
+                    $words = array_filter(explode(' ', strtolower(preg_replace('/[^a-zA-Z0-9\s]/', '', $sp->name))), fn($w) => strlen($w) >= 3);
+                    foreach ($words as $word) {
+                        $speakerWordMap[$word] = ($speakerWordMap[$word] ?? 0) + 1;
+                    }
+                }
+
                 foreach ($eventSpeakers as $es) {
                     $sp = $es->speaker;
                     if (!$sp) continue;
@@ -309,6 +361,7 @@ class CertificateController extends Controller
                     $nik = $sp->nip_nik;
                     $cleanName = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $sp->name));
 
+                    // 1. NIK narasumber (unik)
                     if ($nik && strlen($nik) >= 4 && Str::contains($filename, strtolower($nik))) {
                         $speakerUser = User::where('email', $sp->email)->orWhere('name', $sp->name)->first();
                         $matchedUser = $speakerUser ?? User::where('role', 'pembicara')->first();
@@ -317,7 +370,12 @@ class CertificateController extends Controller
                         break;
                     }
 
+                    // 2. Nama lengkap narasumber — guard ambigu
                     if (strlen($cleanName) >= 3 && Str::contains($cleanFilename, $cleanName)) {
+                        if (($speakerNameCounts[$cleanName] ?? 1) > 1) {
+                            $skippedDueToAmbiguity = true;
+                            continue;
+                        }
                         $speakerUser = User::where('email', $sp->email)->orWhere('name', $sp->name)->first();
                         $matchedUser = $speakerUser ?? User::where('role', 'pembicara')->first();
                         $matchedRole = 'pembicara';
@@ -325,10 +383,14 @@ class CertificateController extends Controller
                         break;
                     }
 
-                    // Kata per kata nama narasumber
+                    // 3. Kata per kata nama narasumber — guard ambigu
                     $speakerWords = array_filter(explode(' ', strtolower(preg_replace('/[^a-zA-Z0-9\s]/', '', $sp->name))), fn($w) => strlen($w) >= 3);
                     foreach ($speakerWords as $word) {
                         if (Str::contains($cleanFilename, $word)) {
+                            if (($speakerWordMap[$word] ?? 1) > 1) {
+                                $skippedDueToAmbiguity = true;
+                                continue 2;
+                            }
                             $speakerUser = User::where('email', $sp->email)->orWhere('name', $sp->name)->first();
                             $matchedUser = $speakerUser ?? User::where('role', 'pembicara')->first();
                             $matchedRole = 'pembicara';
@@ -366,11 +428,22 @@ class CertificateController extends Controller
                 }
             } else {
                 $unmatchedCount++;
+                if ($skippedDueToAmbiguity) {
+                    $ambiguousCount++;
+                }
             }
         }
 
         $totalUploaded = count($processedFiles);
-        return back()->with('success', "🎉 REPOSITORY DIPERBARUI: {$totalUploaded} file diproses. Berhasil mencocokkan {$matchedCount} sertifikat ke peserta/narasumber secara otomatis via NIK/Nama!" . ($unmatchedCount > 0 ? " ({$unmatchedCount} file belum cocok dan dapat dihubungkan manual)." : ''));
+        $msg = "REPOSITORY DIPERBARUI: {$totalUploaded} file diproses. {$matchedCount} sertifikat berhasil dicocokan otomatis (via NIK/kode registrasi/nama unik).";
+        if ($ambiguousCount > 0) {
+            $msg .= " {$ambiguousCount} file dilewati karena nama ganda (ambiguous) — sambungkan manual via tombol Unggah per baris.";
+        }
+        $remainingUnmatched = $unmatchedCount - $ambiguousCount;
+        if ($remainingUnmatched > 0) {
+            $msg .= " {$remainingUnmatched} file belum cocok dan dapat dihubungkan manual.";
+        }
+        return back()->with('success', $msg);
     }
 
     /**

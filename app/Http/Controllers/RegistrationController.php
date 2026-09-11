@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use App\Models\BimtekEvent;
 use App\Models\EventRegistration;
 use App\Models\RegistrationAnswer;
 use App\Models\Attendance;
+use App\Rules\ValidIndonesianNIK;
 use Inertia\Inertia;
 
 class RegistrationController extends Controller
@@ -60,13 +62,13 @@ class RegistrationController extends Controller
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'email' => 'required|email|max:255',
-                'no_hp' => 'required|string|max:50',
+                'no_hp' => ['required', 'string', 'max:20', 'regex:/^08[0-9]{7,12}$/'],
                 'instansi' => 'required|string|max:255',
-                'nip_nik' => 'required|string|max:50',
+                'nip_nik' => ['required', 'string', 'max:20', 'regex:/^[0-9]{16,18}$/'],
                 'topic' => 'required|string|max:255',
                 'golongan' => 'required|string|in:Golongan III,Golongan IV,Non-ASN',
                 'bank_name' => 'required|string|max:100',
-                'account_number' => 'required|string|max:100',
+                'account_number' => ['required', 'string', 'max:24', 'regex:/^[0-9]{8,24}$/'],
                 'account_name' => 'required|string|max:255',
                 'foto_ktp' => ($needsKtp ? 'required|file|mimes:jpeg,png,jpg,pdf|max:5120' : 'nullable|file|mimes:jpeg,png,jpg,pdf|max:5120'),
                 'foto_npwp' => ($needsNpwp ? 'required|file|mimes:jpeg,png,jpg,pdf|max:5120' : 'nullable|file|mimes:jpeg,png,jpg,pdf|max:5120'),
@@ -76,6 +78,9 @@ class RegistrationController extends Controller
                 'foto_ktp.required' => 'Wajib mengunggah foto / scan KTP sebelum mendaftar.',
                 'foto_npwp.required' => 'Wajib mengunggah foto / scan NPWP sebelum mendaftar.',
                 'salinan_buku_rekening.required' => 'Wajib mengunggah salinan buku nomor rekening bank sebelum mendaftar.',
+                'no_hp.regex' => 'Nomor HP harus format Indonesia (08xxxxxxxxxx).',
+                'nip_nik.regex' => 'NIP/NIK harus 16-18 digit angka.',
+                'account_number.regex' => 'Nomor rekening harus 8-24 digit angka.',
             ]);
 
             // Handle file uploads
@@ -177,7 +182,10 @@ class RegistrationController extends Controller
         }
 
         // 2. DEFAULT UNTUK ROLE PESERTA (user.role === 'user')
-        // Prevent duplicate registration for participant
+        // Prevent duplicate registration for participant.
+        // Note: cek awal cepat di luar transaksi untuk UX (kalau sudah daftar,
+        // redirect ke tiket tanpa perlu lock). Pertahanan mutlak tetap di
+        // unique index (event_reg_unique_event_user) — lihat migration.
         $existing = EventRegistration::where('bimtek_event_id', $eventId)
             ->where('user_id', $user->id)
             ->first();
@@ -190,16 +198,21 @@ class RegistrationController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
-            'no_hp' => 'required|string|max:50',
+            'no_hp' => ['required', 'string', 'max:20', 'regex:/^08[0-9]{7,12}$/'],
             'instansi' => 'required|string|max:255',
             'jabatan' => 'nullable|string|max:255',
-            'nik' => 'required|string|max:50',
-            'npwp' => 'nullable|string|max:50',
+            'nik' => ['required', 'string', 'size:16', new ValidIndonesianNIK],
+            'npwp' => ['nullable', 'string', 'max:20', 'regex:/^([0-9]{2}\.?[0-9]{3}\.?[0-9]{3}\.?[0-9]-?[0-9]{3}\.?[0-9]{3}|[0-9]{15,16})$/'],
             'bank_name' => 'required|string|max:100',
-            'account_number' => 'required|string|max:100',
+            'account_number' => ['required', 'string', 'max:24', 'regex:/^[0-9]{8,24}$/'],
             'account_name' => 'required|string|max:255',
             'foto_ktp' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:5120',
             'foto_npwp' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:5120',
+        ], [
+            'nik.size' => 'NIK harus terdiri dari 16 digit.',
+            'no_hp.regex' => 'Nomor HP harus format Indonesia (08xxxxxxxxxx).',
+            'account_number.regex' => 'Nomor rekening harus 8-24 digit angka.',
+            'npwp.regex' => 'Format NPWP tidak valid.',
         ]);
 
         // Update user profile basic fields
@@ -236,13 +249,49 @@ class RegistrationController extends Controller
             'verification_status' => 'terverifikasi',
         ]);
 
-        $registration = EventRegistration::create([
-            'bimtek_event_id' => $event->id,
-            'user_id' => $user->id,
-            'registration_code' => $regCode,
-            'status' => 'approved',
-            'registered_at' => now(),
-        ]);
+        // Create registration atomically with quota enforcement.
+        // Quota check + insert di dalam transaksi + lockForUpdate event row
+        // menutup race condition TOCTOU (N request konkuren pas sisa 1 slot).
+        // Unique index (event_id, user_id) jadi pertahanan terakhir anti
+        // double-register kalau cek cepat di atas lolos karena konkurensi.
+        try {
+            $registration = DB::transaction(function () use ($event, $user, $regCode) {
+                $locked = BimtekEvent::where('id', $event->id)->lockForUpdate()->first();
+
+                $currentCount = EventRegistration::where('bimtek_event_id', $event->id)
+                    ->count();
+
+                if ($locked->quota && $currentCount >= $locked->quota) {
+                    throw new \App\Exceptions\OverQuotaException(
+                        'Kuota pendaftaran kegiatan ini sudah penuh (' . $locked->quota . ' peserta).'
+                    );
+                }
+
+                return EventRegistration::create([
+                    'bimtek_event_id' => $event->id,
+                    'user_id' => $user->id,
+                    'registration_code' => $regCode,
+                    'status' => 'approved',
+                    'registered_at' => now(),
+                ]);
+            });
+        } catch (\App\Exceptions\OverQuotaException $e) {
+            return redirect()->route('events.show', $event->id)
+                ->with('error', $e->getMessage());
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Unique constraint violation (SQLSTATE 23000) = double-register
+            // race yang dihalangi di level DB. Arahkan ke tiket yang sudah ada.
+            if (($e->errorInfo[1] ?? 0) === 1062) {
+                $existingReg = EventRegistration::where('bimtek_event_id', $event->id)
+                    ->where('user_id', $user->id)
+                    ->first();
+                if ($existingReg) {
+                    return redirect()->route('registrations.ticket', $existingReg->id)
+                        ->with('info', 'Anda telah terdaftar pada kegiatan BIMTEK ini.');
+                }
+            }
+            throw $e;
+        }
 
         // Process dynamic form answers
         $answers = $request->input('answers', []);
