@@ -46,9 +46,14 @@ class SecurityHeaders
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
 
         // Permissions policy — matikan API sensitif browser by default.
+        // CATATAN: camera TIDAK dimatikan. Modul Presensi Hari-H (/attendance/scan)
+        // wajib pakai kamera untuk scan QR Code resmi. Mematikan camera=() di sini
+        // akan ditolak browser → html5-qrcode gagal start → "Izin kamera ditolak".
+        // Kamera tetap aman: tetap butuh secure context (HTTPS Railway) + prompt
+        // izin user per-origin. Yang dimatikan hanya API yang tidak dipakai app.
         $response->headers->set(
             'Permissions-Policy',
-            'camera=(), microphone=(), geolocation=(), payment=()'
+            'microphone=(), geolocation=(), payment=()'
         );
 
         // HSTS — hanya kirim lewat https (Railway terminates TLS di proxy).

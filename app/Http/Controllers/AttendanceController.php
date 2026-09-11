@@ -311,6 +311,15 @@ class AttendanceController extends Controller
 
         // 4. Catat presensi — DB constraint menangkap duplikat
         $roleType = $user->role === 'pembicara' ? 'pembicara' : 'peserta';
+
+        // Pre-check eksplisit: hindari bergantung pada exception untuk alur normal.
+        $existing = Attendance::where('user_id', $user->id)
+            ->where('event_id', $eventId)
+            ->exists();
+        if ($existing) {
+            return back()->with('success', '✓ ANDA SUDAH PRESENSI: Kehadiran Anda dalam kegiatan ini sudah tercatat sebelumnya.');
+        }
+
         try {
             Attendance::create([
                 'registration_id' => $eligibility['registration_id'],
@@ -325,8 +334,26 @@ class AttendanceController extends Controller
                     : 'Presensi Peserta via Scan QR Code Admin',
             ]);
         } catch (\Illuminate\Database\QueryException $e) {
-            // Unique constraint violation — sudah presensi sebelumnya
-            return back()->with('success', '✓ ANDA SUDAH PRESENSI: Kehadiran Anda dalam kegiatan ini sudah tercatat sebelumnya.');
+            $errorCode = $e->errorInfo[1] ?? 0;
+
+            // 1062 = unique constraint violation (MySQL) — race double-check-in yang
+            // lolos pre-check di atas. Ini satu-satunya kondisi yang absah dianggap
+            // "sudah presensi". Pre-check + unique constraint = pertahanan ganda.
+            if ($errorCode === 1062) {
+                return back()->with('success', '✓ ANDA SUDAH PRESENSI: Kehadiran Anda dalam kegiatan ini sudah tercatat sebelumnya.');
+            }
+
+            // SEMUA QueryException lain (FK gagal, NOT NULL, koneksi DB mati, dll.)
+            // wajib dilaporkan sebagai ERROR — bukan sukses palsu. Sebelumnya catch
+            // ini menangkap semua dan mengembalikan 'success', sehingga user melihat
+            // "Presensi Sukses" padahal tidak ada record tersimpan di DB. Itu
+            // kebohongan sistem yang berbahaya untuk aplikasi presensi pemerintah.
+            \Illuminate\Support\Facades\Log::error('Attendance check-in gagal (QueryException non-1062): ' . $e->getMessage(), [
+                'user_id'  => $user->id,
+                'event_id' => $eventId,
+                'code'     => $errorCode,
+            ]);
+            return back()->with('error', '⚠️ PRESENSI GAGAL: Terjadi kesalahan teknis saat mencatat kehadiran Anda. Data Anda belum tersimpan. Mohon hubungi petugas Admin untuk dicatatkan presensi secara manual.');
         }
 
         // 5. Broadcast real-time ke dashboard admin
@@ -370,7 +397,19 @@ class AttendanceController extends Controller
                 'notes'               => '[Presensi Manual Admin] ' . $validated['notes'],
             ]);
         } catch (\Illuminate\Database\QueryException $e) {
-            return back()->with('error', "{$targetUser->name} sudah memiliki catatan presensi pada kegiatan ini.");
+            $errorCode = $e->errorInfo[1] ?? 0;
+            if ($errorCode === 1062) {
+                return back()->with('error', "{$targetUser->name} sudah memiliki catatan presensi pada kegiatan ini.");
+            }
+            // Error non-1062 jangan ditampilkan sebagai "sudah presensi" — itu
+            // menyesatkan admin. Log + kasih pesan error teknis yang akurat.
+            \Illuminate\Support\Facades\Log::error('Admin manual check-in gagal (QueryException non-1062): ' . $e->getMessage(), [
+                'target_user_id' => $targetUser->id,
+                'event_id'       => $eventId,
+                'admin_id'       => auth()->id(),
+                'code'           => $errorCode,
+            ]);
+            return back()->with('error', "⚠️ Gagal mencatat presensi untuk {$targetUser->name}: terjadi kesalahan teknis (bukan duplikat). Silakan coba lagi atau periksa log sistem.");
         }
 
         return back()->with('success', "✓ Presensi manual untuk {$targetUser->name} berhasil dicatat oleh Admin.");
