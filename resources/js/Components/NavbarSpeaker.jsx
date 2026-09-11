@@ -5,14 +5,13 @@ import {
   Award, 
   ChevronDown, 
   LogOut, 
-  Menu, 
-  X, 
-  CreditCard, 
-  Mic, 
-  History, 
-  Camera, 
-  User, 
-  LayoutDashboard 
+  Menu,
+  X,
+  CreditCard,
+  Mic,
+  Camera,
+  User,
+  LayoutDashboard
 } from 'lucide-react';
 import DiskominfoLogo from './DiskominfoLogo';
 
@@ -97,18 +96,6 @@ export default function NavbarSpeaker() {
             >
               <Camera className="w-3.5 h-3.5 text-purple-600" />
               <span>Presensi Hari-H</span>
-            </Link>
-
-            <Link
-              href="/event-history"
-              className={`px-3 py-2 rounded-xl whitespace-nowrap flex items-center gap-1.5 transition-all ${
-                currentPath.startsWith('/event-history')
-                  ? 'bg-blue-900 text-white font-black shadow-xs'
-                  : 'text-slate-700 hover:bg-slate-100 hover:text-blue-900'
-              }`}
-            >
-              <History className="w-3.5 h-3.5" />
-              <span>Riwayat</span>
             </Link>
 
             <Link
@@ -215,7 +202,6 @@ export default function NavbarSpeaker() {
           <Link href="/dashboard" className="block px-3 py-2 rounded-xl hover:bg-slate-50 font-bold">🏠 Beranda</Link>
           <Link href="/events" className="block px-3 py-2 rounded-xl hover:bg-slate-50">📅 Jadwal BIMTEK</Link>
           <Link href="/attendance/scan" className="block px-3 py-2 rounded-xl hover:bg-slate-50">📷 Presensi Hari-H</Link>
-          <Link href="/event-history" className="block px-3 py-2 rounded-xl hover:bg-slate-50">📜 Riwayat Mengajar</Link>
           <Link href="/my-certificates" className="block px-3 py-2 rounded-xl hover:bg-slate-50">🏆 Sertifikat Narasumber</Link>
           <Link href="/profile" className="block px-3 py-2 rounded-xl hover:bg-slate-50 font-bold text-blue-900">👤 Profil & Rekening BJB</Link>
 

@@ -130,7 +130,16 @@ Route::middleware('auth')->group(function () {
 
     // PERSONAL CERTIFICATES
     Route::get('/my-certificates', [CertificateController::class, 'myCertificates'])->name('my-certificates');
-    Route::get('/event-history', [BimtekEventController::class, 'history'])->name('event-history');
+
+    // CATATAN: route /event-history yang LAMA (tanpa AdminMiddleware) sengaja
+    // DIHAPUS. Sebelumnya route ini duplikat dari /admin/event-history tapi
+    // TIDAK berada di dalam grup AdminMiddleware → bocor data privasi: semua
+    // peserta/pembicara ter-auth bisa membuka halaman rekap admin dan melihat
+    // NIP/NIK + email + instansi SELURUH peserta lintas kegiatan. Route resmi
+    // untuk rekap riwayat ada di /admin/event-history (gated AdminMiddleware,
+    // lihat bawah). UI peserta/pembicara sudah menampilkan riwayat masing-
+    // masing (registrasi/jadwal mengajar) langsung di Dashboard — tidak perlu
+    // link ke halaman rekap admin.
 
     // SPEAKER MATERIAL UPLOAD, DOWNLOAD & STREAM
     Route::post('/speaker/upload-material', [SpeakerController::class, 'uploadMaterial'])->name('speaker.upload-material');

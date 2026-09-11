@@ -10,7 +10,6 @@ import {
   LayoutDashboard,
   Calendar,
   Camera,
-  History,
   ShieldCheck,
   CreditCard
 } from 'lucide-react';
@@ -90,11 +89,11 @@ export default function NavbarPublic() {
             </Link>
 
             {user && (
-              <Link 
-                href="/attendance/scan" 
+              <Link
+                href="/attendance/scan"
                 className={`px-3 py-2 rounded-xl whitespace-nowrap flex items-center gap-1.5 transition-all ${
-                  currentPath.startsWith('/attendance') 
-                    ? 'bg-blue-900 text-white font-black shadow-xs' 
+                  currentPath.startsWith('/attendance')
+                    ? 'bg-blue-900 text-white font-black shadow-xs'
                     : 'text-slate-700 hover:bg-slate-100 hover:text-blue-900'
                 }`}
               >
@@ -103,24 +102,12 @@ export default function NavbarPublic() {
               </Link>
             )}
 
-            <Link 
-              href="/event-history" 
-              className={`px-3 py-2 rounded-xl whitespace-nowrap flex items-center gap-1.5 transition-all ${
-                currentPath.startsWith('/event-history') 
-                  ? 'bg-blue-900 text-white font-black shadow-xs' 
-                  : 'text-slate-700 hover:bg-slate-100 hover:text-blue-900'
-              }`}
-            >
-              <History className="w-3.5 h-3.5" />
-              <span>Riwayat</span>
-            </Link>
-
             {user && (
-              <Link 
-                href="/my-certificates" 
+              <Link
+                href="/my-certificates"
                 className={`px-3 py-2 rounded-xl whitespace-nowrap flex items-center gap-1.5 transition-all ${
-                  currentPath.startsWith('/my-certificates') 
-                    ? 'bg-amber-400 text-blue-950 font-black ring-2 ring-amber-300 shadow-xs' 
+                  currentPath.startsWith('/my-certificates')
+                    ? 'bg-amber-400 text-blue-950 font-black ring-2 ring-amber-300 shadow-xs'
                     : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200'
                 }`}
               >
@@ -253,10 +240,6 @@ export default function NavbarPublic() {
             <Camera className="w-4 h-4 text-slate-400" />
             <span>Presensi Hari-H</span>
           </Link>}
-          <Link href="/event-history" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-50 text-slate-700">
-            <History className="w-4 h-4 text-slate-400" />
-            <span>Riwayat BIMTEK</span>
-          </Link>
           {user && <Link href="/my-certificates" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-50 text-slate-700">
             <Award className="w-4 h-4 text-slate-400" />
             <span>Sertifikat Saya</span>

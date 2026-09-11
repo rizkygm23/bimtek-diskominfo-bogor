@@ -91,7 +91,6 @@ const NAV_CONFIG = {
             label: 'Kegiatan',
             items: [
                 { href: '/attendance/scan', label: 'Presensi Hari-H', icon: Camera },
-                { href: '/event-history', label: 'Riwayat Mengajar', icon: History },
                 { href: '/my-certificates', label: 'Sertifikat', icon: Award },
             ],
         },
@@ -114,7 +113,6 @@ const NAV_CONFIG = {
             label: 'Kegiatan',
             items: [
                 { href: '/attendance/scan', label: 'Presensi Hari-H', icon: Camera },
-                { href: '/event-history', label: 'Riwayat', icon: History },
                 { href: '/my-certificates', label: 'Sertifikat Saya', icon: Award },
             ],
         },
