@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { 
   Monitor, 
   UserPlus, 
@@ -23,6 +23,8 @@ import DiskominfoLogo from '../Components/DiskominfoLogo';
 export default function Landing({ events }) {
   const [copiedId, setCopiedId] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { auth } = usePage().props;
+  const isLoggedIn = !!auth?.user;
 
   const scrollToSection = (id) => {
     const el = document.getElementById(id);
@@ -308,14 +310,15 @@ export default function Landing({ events }) {
         </div>
       </section>
 
-      {/* ==================== FOOTER ==================== */}
+      {/* ==================== FOOTER (hidden saat user sudah login) ==================== */}
+      {!isLoggedIn && (
       <footer className="bg-slate-900 text-slate-400 border-t border-slate-800 py-10 px-4 sm:px-6 lg:px-8 text-xs">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <img 
-              src="/images/logo_diskominfo_bogorkab.png" 
-              alt="Diskominfo" 
-              className="h-8 object-contain brightness-0 invert opacity-75" 
+            <img
+              src="/images/logo_diskominfo_bogorkab.png"
+              alt="Diskominfo"
+              className="h-8 object-contain brightness-0 invert opacity-75"
             />
             <span>&copy; 2026 Dinas Komunikasi dan Informatika Kabupaten Bogor. All Rights Reserved.</span>
           </div>
@@ -326,6 +329,7 @@ export default function Landing({ events }) {
           </div>
         </div>
       </footer>
+      )}
 
     </div>
   );

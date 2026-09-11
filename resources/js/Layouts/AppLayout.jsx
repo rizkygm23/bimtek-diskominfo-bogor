@@ -159,10 +159,13 @@ export default function AppLayout({ children, title }) {
         {children}
       </main>
 
-      {/* 5. OFFICIAL FOOTER */}
+      {/* 5. OFFICIAL FOOTER — hanya tampil untuk pengunjung yang BELUM login.
+          Saat user sudah login (admin/peserta/pembicara), footer disembunyikan
+          agar dashboard & halaman fungsional tampil clean tanpa elemen publik. */}
+      {!currentUser && (
       <footer className="bg-[#0f2942] text-white border-t-4 border-blue-600 print:hidden">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 py-10 grid grid-cols-1 md:grid-cols-3 gap-8 text-xs">
-          
+
           <div className="space-y-3">
             <h3 className="font-extrabold text-sm border-b border-blue-700 pb-2 text-amber-400">Kontak Detail</h3>
             <div className="space-y-2 text-slate-300">
@@ -218,6 +221,7 @@ export default function AppLayout({ children, title }) {
           </div>
         </div>
       </footer>
+      )}
 
       {/* MOBILE NATIVE BOTTOM NAVIGATION */}
       <MobileBottomNav />
