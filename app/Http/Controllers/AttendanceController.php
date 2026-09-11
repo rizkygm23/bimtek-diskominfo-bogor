@@ -376,6 +376,105 @@ class AttendanceController extends Controller
         return back()->with('success', "✓ Presensi manual untuk {$targetUser->name} berhasil dicatat oleh Admin.");
     }
 
+    /**
+     * Pendaftaran peserta on-the-spot hari-H:
+     *  - Cek email apakah sudah ada akun.
+     *    * Jika ada: pakai akun lama (admin tetap bisa absenin walau peserta
+     *      sudah punya akun).
+     *    * Jika belum: buat akun baru dengan password = email (mudah diingat,
+     *      bisa diubah di /profile nanti).
+     *  - Daftarkan ke event (EventRegistration, status approved).
+     *  - Catat Attendance (absensi_manual_admin).
+     *  - Redirect balik ke halaman scan admin dengan flash success.
+     *  - Admin TIDAK di-logout (tidak ada Auth::login).
+     */
+    public function adminOnTheSpotRegister(Request $request)
+    {
+        $validated = $request->validate([
+            'event_id' => 'required|exists:bimtek_events,id',
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|email|max:255',
+            'nip_nik'  => 'nullable|string|max:50',
+            'instansi' => 'nullable|string|max:255',
+            'no_hp'    => 'nullable|string|max:50',
+            'notes'    => 'nullable|string|max:500',
+        ]);
+
+        $eventId = $validated['event_id'];
+        $email   = strtolower(trim($validated['email']));
+
+        // 1. Cari atau buat akun user
+        $user = User::where('email', $email)->first();
+
+        if (!$user) {
+            // Akun baru: password = email (mudah diingat, ubah sendiri di profile)
+            $user = User::create([
+                'name'     => $validated['name'],
+                'email'    => $email,
+                'password' => \Illuminate\Support\Facades\Hash::make($email),
+                'role'     => 'user',
+                'nip_nik'  => $validated['nip_nik'] ?? ('3201' . rand(1000000000, 9999999999)),
+                'instansi' => $validated['instansi'] ?? 'Umum / Instansi Terkait',
+                'jabatan'  => 'Peserta BIMTEK',
+                'no_hp'    => $validated['no_hp'] ?? '-',
+            ]);
+
+            // Buat participant profile minimal
+            \App\Models\ParticipantProfile::create([
+                'user_id'            => $user->id,
+                'nik'                => $user->nip_nik,
+                'instansi'           => $user->instansi,
+                'no_hp'              => $user->no_hp,
+                'verification_status' => 'terverifikasi',
+            ]);
+        } else {
+            // Akun sudah ada — update info dasar kalau ada perubahan
+            $user->update([
+                'name'     => $validated['name'],
+                'nip_nik'  => $validated['nip_nik'] ?? $user->nip_nik,
+                'instansi' => $validated['instansi'] ?? $user->instansi,
+                'no_hp'    => $validated['no_hp'] ?? $user->no_hp,
+            ]);
+        }
+
+        // 2. Daftar ke event
+        $registration = EventRegistration::firstOrCreate(
+            ['bimtek_event_id' => $eventId, 'user_id' => $user->id],
+            [
+                'registration_code' => 'OTS-' . strtoupper(Str::random(6)),
+                'status'           => 'approved',
+                'registered_at'    => now(),
+            ]
+        );
+
+        // 3. Catat presensi
+        $existingAttendance = Attendance::where('user_id', $user->id)
+            ->where('event_id', $eventId)
+            ->first();
+
+        if ($existingAttendance) {
+            return back()->with('error', "{$user->name} sudah memiliki catatan presensi pada kegiatan ini.");
+        }
+
+        try {
+            Attendance::create([
+                'registration_id'      => $registration->id,
+                'user_id'              => $user->id,
+                'event_id'             => $eventId,
+                'role_type'            => 'peserta',
+                'attendance_type'      => 'absensi_manual_admin',
+                'checkin_method'       => 'manual_admin',
+                'verified_by_admin_id' => auth()->id(),
+                'checked_in_at'        => now(),
+                'notes'                => '[On-the-Spot Hari-H] ' . ($validated['notes'] ?? 'Pendaftaran langsung oleh Admin'),
+            ]);
+        } catch (\Illuminate\Database\QueryException $e) {
+            return back()->with('error', "Gagal mencatat presensi: {$e->getMessage()}");
+        }
+
+        return back()->with('success', "✓ {$user->name} berhasil didaftarkan & dicatat kehadirannya. Password akun: {$email} (login di /login).");
+    }
+
     // ──────────────────────────────────────────────────────────────────────────
     // PRIVATE HELPERS
     // ──────────────────────────────────────────────────────────────────────────

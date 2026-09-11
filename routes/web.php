@@ -149,6 +149,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/admin/events/{id}/qr-session', [AttendanceController::class, 'generateNewQrSession'])->name('admin.events.qr-session');
         // Throttle: maks 30 req/menit/admin — presensi manual berurutan
         Route::post('/admin/attendance/manual', [AttendanceController::class, 'adminManualCheckIn'])->middleware('throttle:30,1')->name('admin.attendance.manual');
+        // Pendaftaran akun + event + presensi on-the-spot untuk peserta walk-in hari-H
+        Route::post('/admin/attendance/on-the-spot', [AttendanceController::class, 'adminOnTheSpotRegister'])->middleware('throttle:20,1')->name('admin.attendance.on-the-spot');
 
         // EVENT CRUD
         Route::post('/admin/events/store', [BimtekEventController::class, 'store'])->name('admin.events.store');

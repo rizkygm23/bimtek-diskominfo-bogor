@@ -31,6 +31,7 @@ export default function Index({ events, registeredEventIds = [] }) {
   const [showModal, setShowModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
   const [showAdminEntryModal, setShowAdminEntryModal] = useState(false);
+  const [showOnSpotModal, setShowOnSpotModal] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState(null);
   const [entryRole, setEntryRole] = useState('peserta');
   const [search, setSearch] = useState('');
@@ -57,6 +58,18 @@ export default function Index({ events, registeredEventIds = [] }) {
     jabatan: 'Masyarakat Umum',
     entry_role: 'peserta',
     bimtek_event_id: '',
+  });
+
+  // Form state for Admin On-the-Spot pendaftaran peserta hari-H
+  // Akun dibuat otomatis (password = email), terdaftar ke event, & dicatat hadir.
+  const onSpotForm = useForm({
+    name: '',
+    email: '',
+    nip_nik: '',
+    instansi: 'Masyarakat Umum',
+    no_hp: '',
+    notes: '',
+    event_id: '',
   });
 
   const handleOpenCreateModal = () => {
@@ -143,6 +156,33 @@ export default function Index({ events, registeredEventIds = [] }) {
       bimtek_event_id: eventId,
     });
     setShowAdminEntryModal(true);
+  };
+
+  // On-the-Spot: buka modal pendaftaran + presensi peserta walk-in hari-H
+  const openOnSpotModal = (eventId) => {
+    setSelectedEventId(eventId);
+    onSpotForm.setData({
+      name: '',
+      email: '',
+      nip_nik: '',
+      instansi: 'Masyarakat Umum',
+      no_hp: '',
+      notes: '',
+      event_id: eventId,
+    });
+    setShowOnSpotModal(true);
+  };
+
+  const handleOnSpotSubmit = (e) => {
+    e.preventDefault();
+    onSpotForm.post('/admin/attendance/on-the-spot', {
+      preserveScroll: true,
+      preserveState: false,
+      onSuccess: () => {
+        setShowOnSpotModal(false);
+        onSpotForm.reset();
+      },
+    });
   };
 
   const handleCopyLink = (eventId) => {
@@ -309,6 +349,16 @@ export default function Index({ events, registeredEventIds = [] }) {
                         Form Builder &rarr;
                       </Link>
                     </div>
+
+                    {/* PESERTA ON-THE-SPOT HARI-H */}
+                    <button
+                      type="button"
+                      onClick={() => openOnSpotModal(item.id)}
+                      className="w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold flex items-center justify-center gap-1.5 transition-colors"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      <span>Peserta On-the-Spot (Hari-H)</span>
+                    </button>
 
                     <button
                       type="button"
@@ -585,6 +635,126 @@ export default function Index({ events, registeredEventIds = [] }) {
                     className="px-5 py-2 bg-blue-900 hover:bg-blue-950 text-white font-extrabold rounded-xl shadow-xs"
                   >
                     Simpan Pendaftaran
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL PESERTA ON-THE-SPOT HARI-H */}
+        {showOnSpotModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs print:hidden">
+            <div className="bg-white rounded-lg max-w-lg w-full p-6 space-y-5 border border-slate-200">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">Peserta On-the-Spot (Hari-H)</h3>
+                  <p className="text-[11px] text-slate-500">
+                    Pendaftaran langsung + pencatatan kehadiran untuk peserta walk-in.
+                    Akun dibuat otomatis (password = email).
+                  </p>
+                </div>
+                <button onClick={() => setShowOnSpotModal(false)} className="text-slate-400 hover:text-slate-600 font-bold text-sm">✕</button>
+              </div>
+
+              <form onSubmit={handleOnSpotSubmit} className="space-y-3.5 text-xs">
+                {onSpotForm.errors.event_id && (
+                  <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-lg text-rose-700 text-[11px] font-medium">
+                    {onSpotForm.errors.event_id}
+                  </div>
+                )}
+
+                <div>
+                  <label className="font-bold text-slate-900 block mb-1">Nama Lengkap:</label>
+                  <input
+                    type="text"
+                    value={onSpotForm.data.name}
+                    onChange={(e) => onSpotForm.setData('name', e.target.value)}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-900"
+                    placeholder="Nama Lengkap dengan Gelar"
+                    required
+                  />
+                  {onSpotForm.errors.name && <p className="text-rose-600 text-[10px] mt-1">{onSpotForm.errors.name}</p>}
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-bold text-slate-900 block mb-1">Email:</label>
+                    <input
+                      type="email"
+                      value={onSpotForm.data.email}
+                      onChange={(e) => onSpotForm.setData('email', e.target.value)}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-900"
+                      placeholder="email@contoh.com"
+                      required
+                    />
+                    {onSpotForm.errors.email && <p className="text-rose-600 text-[10px] mt-1">{onSpotForm.errors.email}</p>}
+                  </div>
+                  <div>
+                    <label className="font-bold text-slate-900 block mb-1">NIP / NIK:</label>
+                    <input
+                      type="text"
+                      value={onSpotForm.data.nip_nik}
+                      onChange={(e) => onSpotForm.setData('nip_nik', e.target.value)}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-900"
+                      placeholder="Nomor NIK KTP"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-bold text-slate-900 block mb-1">Instansi:</label>
+                    <input
+                      type="text"
+                      value={onSpotForm.data.instansi}
+                      onChange={(e) => onSpotForm.setData('instansi', e.target.value)}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-900"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold text-slate-900 block mb-1">No. HP / WhatsApp:</label>
+                    <input
+                      type="text"
+                      value={onSpotForm.data.no_hp}
+                      onChange={(e) => onSpotForm.setData('no_hp', e.target.value)}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-900"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-900 block mb-1">Catatan (opsional):</label>
+                  <input
+                    type="text"
+                    value={onSpotForm.data.notes}
+                    onChange={(e) => onSpotForm.setData('notes', e.target.value)}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-900"
+                    placeholder="Mis: walk-in, tidak daftar online"
+                  />
+                </div>
+
+                <div className="p-2.5 bg-blue-50 border border-blue-200 rounded-lg text-[11px] text-blue-900 leading-relaxed">
+                  <strong>Catatan:</strong> Akun peserta dibuat otomatis dengan password = email.
+                  Peserta bisa login di <code className="bg-white px-1 rounded">/login</code> pakai email + password (email),
+                  lalu ubah password di <code className="bg-white px-1 rounded">/profile</code>.
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-200">
+                  <button
+                    type="button"
+                    onClick={() => setShowOnSpotModal(false)}
+                    className="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-lg"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={onSpotForm.processing}
+                    className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg flex items-center gap-1.5 disabled:opacity-50"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    {onSpotForm.processing ? 'Memproses...' : 'Daftarkan & Absen'}
                   </button>
                 </div>
               </form>
