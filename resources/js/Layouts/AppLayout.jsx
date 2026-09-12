@@ -89,7 +89,7 @@ export default function AppLayout({ children, title }) {
       <div className="min-h-[100dvh] flex bg-slate-50 text-slate-900 antialiased overflow-x-hidden w-full max-w-full">
         <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-        <div className="flex-1 lg:ml-64 flex flex-col min-h-[100dvh]">
+        <div className="flex-1 lg:ml-64 flex flex-col min-h-[100dvh] pb-[4rem] lg:pb-0">
           <MobileTopBar onMenuClick={() => setSidebarOpen(true)} />
 
           <main className="flex-1 max-w-6xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6 print:p-0 print:m-0 print:w-full print:max-w-none print:space-y-0">
