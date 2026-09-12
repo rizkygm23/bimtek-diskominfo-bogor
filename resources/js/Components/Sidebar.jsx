@@ -21,8 +21,9 @@ import {
 import DiskominfoLogo from './DiskominfoLogo';
 
 export default function Sidebar({ open, onClose }) {
-  const { auth, url: pageUrl } = usePage();
-  const current = (pageUrl || '').split('?')[0];
+  const page = usePage();
+  const { auth } = page.props;
+  const current = (page.url || '').split('?')[0];
   const user = auth?.user;
   // Role sync dengan backend (AdminMiddleware.php:15 — literal 'admin'/'pembicara'/'user').
   // Normalize ke lowercase supaya tahan data kapital/whitespace dari DB.
