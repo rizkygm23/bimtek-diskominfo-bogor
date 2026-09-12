@@ -23,7 +23,9 @@ export default function MobileBottomNav() {
   const page = usePage();
   const { auth } = page.props;
   const user = auth?.user;
-  const isAdmin = user?.role === 'admin';
+  // Normalize role (sync dengan Sidebar & AdminMiddleware.php — literal lowercase).
+  const role = (user?.role || '').toString().trim().toLowerCase();
+  const isAdmin = role === 'admin';
   const current = (page.url || '').split('?')[0];
 
   const isActive = (href, prefix = false) =>

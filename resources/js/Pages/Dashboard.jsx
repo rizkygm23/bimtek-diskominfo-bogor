@@ -56,8 +56,10 @@ const TwitterIcon = (props) => (
 export default function Dashboard({ stats, myRegistrations = [], myTeachingSchedule = [], adminEvents = [] }) {
   const { auth } = usePage().props;
   const user = auth?.user || {};
-  const isAdmin = user?.role === 'admin';
-  const isSpeaker = user?.role === 'pembicara';
+  // Normalize role (sync dengan Sidebar & AdminMiddleware.php — literal lowercase).
+  const role = (user?.role || '').toString().trim().toLowerCase();
+  const isAdmin = role === 'admin';
+  const isSpeaker = role === 'pembicara';
 
   const [liveStats, setLiveStats] = useState(stats || {});
   const [eventsList, setEventsList] = useState(adminEvents || []);

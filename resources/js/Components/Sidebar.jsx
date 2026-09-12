@@ -24,7 +24,9 @@ export default function Sidebar({ open, onClose }) {
   const { auth, url: pageUrl } = usePage();
   const current = (pageUrl || '').split('?')[0];
   const user = auth?.user;
-  const role = user?.role;
+  // Role sync dengan backend (AdminMiddleware.php:15 — literal 'admin'/'pembicara'/'user').
+  // Normalize ke lowercase supaya tahan data kapital/whitespace dari DB.
+  const role = (user?.role || '').toString().trim().toLowerCase();
   const isAdmin = role === 'admin';
   const isPembicara = role === 'pembicara';
 
