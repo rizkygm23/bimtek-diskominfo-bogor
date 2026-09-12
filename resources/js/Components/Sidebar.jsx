@@ -63,7 +63,6 @@ export default function Sidebar({ open, onClose }) {
       ]},
       { label: 'Kegiatan', items: [
         { href: '/attendance/scan', label: 'Presensi Hari-H', icon: Camera, prefix: true },
-        { href: '/event-history', label: 'Riwayat Mengajar', icon: History },
         { href: '/my-certificates', label: 'Sertifikat Saya', icon: BarChart3 },
       ]},
       { label: 'Akun', items: [
@@ -77,7 +76,6 @@ export default function Sidebar({ open, onClose }) {
       ]},
       { label: 'Kegiatan', items: [
         { href: '/attendance/scan', label: 'Presensi Hari-H', icon: Camera, prefix: true },
-        { href: '/event-history', label: 'Riwayat', icon: History },
         { href: '/my-certificates', label: 'Sertifikat Saya', icon: BarChart3 },
       ]},
       { label: 'Akun', items: [
