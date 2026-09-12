@@ -1,19 +1,18 @@
 import React, { useState } from 'react';
 import { useForm, Link, usePage } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
-import { 
-  History, 
-  FileSpreadsheet, 
-  Download, 
-  Upload, 
-  Calendar, 
-  MapPin, 
-  Users, 
-  CheckCircle2, 
+import {
+  History,
+  FileSpreadsheet,
+  Download,
+  Upload,
+  Calendar,
+  MapPin,
+  Users,
+  CheckCircle2,
   Search,
   Eye,
   FileText,
-  Sparkles,
   ArrowRight
 } from 'lucide-react';
 
@@ -160,7 +159,6 @@ export default function EventHistory({ eventsHistory = [] }) {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
               <div>
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-900 text-[11px] font-black uppercase mb-1">
-                  <Sparkles className="w-3.5 h-3.5 text-blue-800" />
                   <span>Form Penginputan Riwayat Kegiatan</span>
                 </div>
                 <h2 className="text-lg md:text-xl font-black text-slate-900">

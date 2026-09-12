@@ -2,17 +2,16 @@ import React, { useState } from 'react';
 import { useForm, Link, router } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import SearchableBankSelect from '../../Components/SearchableBankSelect';
-import { 
-  Plus, 
-  Trash2, 
-  ArrowUp, 
-  ArrowDown, 
-  ArrowLeft, 
-  Save, 
-  CheckSquare, 
+import {
+  Plus,
+  Trash2,
+  ArrowUp,
+  ArrowDown,
+  ArrowLeft,
+  Save,
+  CheckSquare,
   FileText,
   List,
-  Sparkles,
   Settings,
   UserPlus,
   Mic,

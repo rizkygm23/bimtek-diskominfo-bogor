@@ -400,7 +400,7 @@ export default function RegisterForm({
         {/* FORM HEADER BANNER */}
         <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 space-y-2 shadow-xs">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-900 text-xs font-bold">
-            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+            <FileCheck className="w-3.5 h-3.5 text-amber-500" />
             <span>Formulir Pendaftaran & Berkas Administrasi Peserta</span>
           </div>
           <h1 className="text-xl font-black text-slate-900 leading-snug">{event.title}</h1>

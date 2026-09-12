@@ -18,7 +18,6 @@ import {
   Mic,
   ShieldCheck,
   FileCheck,
-  Sparkles,
   BookOpen,
   Send,
   FolderDown,
@@ -147,7 +146,7 @@ export default function Dashboard({ stats, myRegistrations = [], myTeachingSched
           <div className="p-6 sm:p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="space-y-3 text-center md:text-left">
               <div className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-blue-900">
-                <Sparkles className="w-3.5 h-3.5" />
+                <Globe className="w-3.5 h-3.5" />
                 <span>Sistem Informasi Manajemen BIMTEK Diskominfo</span>
               </div>
 

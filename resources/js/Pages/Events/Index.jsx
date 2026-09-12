@@ -16,7 +16,6 @@ import {
   Camera,
   Trash2,
   Edit,
-  Sparkles,
   BookOpen,
   ArrowRight
 } from 'lucide-react';
@@ -164,7 +163,7 @@ export default function Index({ events, registeredEventIds = [] }) {
         <div className="bg-white border border-slate-200 p-6 rounded-3xl shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-900 text-xs font-bold mb-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+              <BookOpen className="w-3.5 h-3.5 text-amber-500" />
               <span>Katalog Resmi Bimbingan Teknis</span>
             </div>
             <h1 className="text-xl font-black text-slate-900 flex items-center gap-2">

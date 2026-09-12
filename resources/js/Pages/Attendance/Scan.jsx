@@ -13,7 +13,6 @@ import {
   Calendar,
   MapPin,
   BookOpen,
-  Sparkles,
   Award,
   Lock,
   ArrowRight,

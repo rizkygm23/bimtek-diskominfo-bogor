@@ -1,5 +1,5 @@
 import React from 'react';
-import { UserCheck, X, Sparkles, Calendar, Clock } from 'lucide-react';
+import { UserCheck, X, Calendar, Clock } from 'lucide-react';
 
 export default function RealtimeToast({ notification, onClose }) {
   if (!notification) return null;

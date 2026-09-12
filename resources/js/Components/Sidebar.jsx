@@ -1,326 +1,224 @@
 import React, { useState, useEffect } from 'react';
-import { usePage, Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import {
-    LayoutDashboard,
-    Calendar,
-    ShieldCheck,
-    Camera,
-    CreditCard,
-    FileCheck,
-    BarChart3,
-    Settings,
-    Users,
-    History,
-    User,
-    Award,
-    Mic,
-    Sliders,
-    FileSpreadsheet,
-    FileText,
-    LogOut,
-    PanelLeftClose,
-    PanelLeftOpen,
-    X,
+  LayoutDashboard,
+  Calendar,
+  ShieldCheck,
+  Camera,
+  CreditCard,
+  FileCheck,
+  Award,
+  BarChart3,
+  Users,
+  History,
+  Settings,
+  FileSpreadsheet,
+  FileText,
+  Sliders,
+  User,
+  LogOut,
+  Mic,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  X
 } from 'lucide-react';
 import DiskominfoLogo from './DiskominfoLogo';
 
-/**
- * Sidebar — role-aware grouped navigation for authenticated users.
- *
- * Design principles (minimalist-ui + design-taste-frontend-v1):
- *  - Flat white surface, 1px borders, single blue-900 accent.
- *  - Active link: 2px left accent bar + slate-900 text + slate-100 bg.
- *  - No gradients, no heavy shadows, no emoji. Icons via lucide.
- *  - Active detection uses usePage().url (Inertia-safe, no window.location lag).
- *
- * Layout:
- *  - lg+ : fixed aside, w-64 expanded / w-16 collapsed (localStorage persist).
- *  - mobile : hidden by default; opened as overlay drawer via MobileTopBar
- *             hamburger (controlled by the `open` / `onClose` props).
- */
-const NAV_CONFIG = {
+export default function Sidebar({ open, onClose }) {
+  const { auth, url: pageUrl } = usePage();
+  const current = (pageUrl || '').split('?')[0];
+  const user = auth?.user;
+  const role = user?.role;
+  const isAdmin = role === 'admin';
+  const isPembicara = role === 'pembicara';
+
+  const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('sidebar-collapsed');
+    if (saved !== null) setCollapsed(saved === 'true');
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('sidebar-collapsed', collapsed);
+  }, [collapsed]);
+
+  const isActive = (href, prefix = false) => prefix ? current.startsWith(href) : current === href;
+
+  const navGroups = {
     admin: [
-        {
-            label: 'Utama',
-            items: [
-                { href: '/dashboard', label: 'Beranda', icon: LayoutDashboard },
-                { href: '/events', label: 'Katalog BIMTEK', icon: Calendar },
-            ],
-        },
-        {
-            label: 'Kegiatan',
-            items: [
-                { href: '/admin/verifications', label: 'Verifikasi Data', icon: ShieldCheck },
-                { href: '/attendance/scan', label: 'Presensi Hari-H', icon: Camera },
-            ],
-        },
-        {
-            label: 'Keuangan',
-            items: [
-                { href: '/admin/payments', label: 'Honor & Pajak', icon: CreditCard },
-                { href: '/admin/tax-settings', label: 'Tarif PPh 21', icon: Sliders },
-            ],
-        },
-        {
-            label: 'Laporan',
-            items: [
-                { href: '/admin/report-center', label: 'Pusat Laporan', icon: BarChart3 },
-                { href: '/admin/reports/participants', label: 'Rekap Peserta', icon: FileSpreadsheet },
-                { href: '/admin/reports/speakers', label: 'Rekap Narasumber', icon: FileText },
-                { href: '/admin/reports/honorarium', label: 'Cetak Honorarium', icon: FileText },
-            ],
-        },
-        {
-            label: 'Sistem',
-            items: [
-                { href: '/admin/speakers', label: 'Master Pembicara', icon: Users },
-                { href: '/admin/event-history', label: 'Riwayat BIMTEK', icon: History },
-                { href: '/profile', label: 'Profil', icon: User },
-            ],
-        },
+      { label: 'Utama', items: [
+        { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { href: '/events', label: 'Katalog BIMTEK', icon: Calendar, prefix: true },
+      ]},
+      { label: 'Kegiatan', items: [
+        { href: '/admin/verifications', label: 'Verifikasi Data', icon: ShieldCheck, prefix: true },
+        { href: '/attendance/scan', label: 'Presensi Hari-H', icon: Camera, prefix: true },
+      ]},
+      { label: 'Keuangan', items: [
+        { href: '/admin/payments', label: 'Honor & Pajak', icon: CreditCard, prefix: true },
+        { href: '/admin/tax-settings', label: 'Tarif PPh 21', icon: Sliders },
+      ]},
+      { label: 'Laporan', items: [
+        { href: '/admin/report-center', label: 'Pusat Laporan', icon: BarChart3 },
+        { href: '/admin/reports/participants', label: 'Rekap Peserta', icon: FileSpreadsheet },
+        { href: '/admin/reports/speakers', label: 'Rekap Narasumber', icon: FileText },
+        { href: '/admin/reports/honorarium', label: 'Cetak Honorarium', icon: FileText },
+      ]},
+      { label: 'Sistem', items: [
+        { href: '/admin/speakers', label: 'Master Pembicara', icon: Users },
+        { href: '/admin/event-history', label: 'Riwayat BIMTEK', icon: History },
+        { href: '/profile', label: 'Profil Saya', icon: User },
+      ]},
     ],
     pembicara: [
-        {
-            label: 'Utama',
-            items: [
-                { href: '/dashboard', label: 'Beranda', icon: LayoutDashboard },
-                { href: '/events', label: 'Jadwal BIMTEK', icon: Calendar },
-            ],
-        },
-        {
-            label: 'Kegiatan',
-            items: [
-                { href: '/attendance/scan', label: 'Presensi Hari-H', icon: Camera },
-                { href: '/my-certificates', label: 'Sertifikat', icon: Award },
-            ],
-        },
-        {
-            label: 'Akun',
-            items: [
-                { href: '/profile', label: 'Profil & Rekening', icon: User },
-            ],
-        },
+      { label: 'Utama', items: [
+        { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { href: '/events', label: 'Jadwal BIMTEK', icon: Calendar, prefix: true },
+      ]},
+      { label: 'Kegiatan', items: [
+        { href: '/attendance/scan', label: 'Presensi Hari-H', icon: Camera, prefix: true },
+        { href: '/event-history', label: 'Riwayat Mengajar', icon: History },
+        { href: '/my-certificates', label: 'Sertifikat Saya', icon: Award },
+      ]},
+      { label: 'Akun', items: [
+        { href: '/profile', label: 'Profil & Rekening', icon: User },
+      ]},
     ],
     user: [
-        {
-            label: 'Utama',
-            items: [
-                { href: '/dashboard', label: 'Beranda', icon: LayoutDashboard },
-                { href: '/events', label: 'Katalog BIMTEK', icon: Calendar },
-            ],
-        },
-        {
-            label: 'Kegiatan',
-            items: [
-                { href: '/attendance/scan', label: 'Presensi Hari-H', icon: Camera },
-                { href: '/my-certificates', label: 'Sertifikat Saya', icon: Award },
-            ],
-        },
-        {
-            label: 'Akun',
-            items: [
-                { href: '/profile', label: 'Profil', icon: User },
-            ],
-        },
+      { label: 'Utama', items: [
+        { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { href: '/events', label: 'Katalog BIMTEK', icon: Calendar, prefix: true },
+      ]},
+      { label: 'Kegiatan', items: [
+        { href: '/attendance/scan', label: 'Presensi Hari-H', icon: Camera, prefix: true },
+        { href: '/event-history', label: 'Riwayat', icon: History },
+        { href: '/my-certificates', label: 'Sertifikat Saya', icon: Award },
+      ]},
+      { label: 'Akun', items: [
+        { href: '/profile', label: 'Profil', icon: User },
+      ]},
     ],
-};
+  };
 
-const ROLE_META = {
-    admin: { label: 'Admin', badge: 'bg-blue-900 text-white' },
-    pembicara: { label: 'Narasumber', badge: 'bg-slate-200 text-slate-700' },
-    user: { label: 'Peserta', badge: 'bg-slate-200 text-slate-700' },
-};
+  const groups = navGroups[role] || navGroups.user;
+  const roleLabel = isAdmin ? 'Admin' : isPembicara ? 'Pembicara' : 'Peserta';
+  const RoleIcon = isAdmin ? CheckCircle2 : isPembicara ? Mic : User;
 
-function isActive(current, href) {
-    if (current === href) return true;
-    // Avoid /dashboard matching everything; only prefix-match deeper routes.
-    if (href !== '/dashboard' && current.startsWith(href + '/')) return true;
-    if (href !== '/dashboard' && current === href) return true;
-    return false;
-}
+  const sidebarWidth = collapsed ? 'w-16' : 'w-64';
+  const sidebarWidthMobile = 'w-72';
 
-export default function Sidebar({ open = false, onClose }) {
-    const page = usePage();
-    const { auth } = page.props;
-    const user = auth?.user || {};
-    const role = user.role || 'user';
-    const current = (page.url || '').split('?')[0];
-    const groups = NAV_CONFIG[role] || NAV_CONFIG.user;
-    const roleMeta = ROLE_META[role] || ROLE_META.user;
-
-    const [collapsed, setCollapsed] = useState(false);
-
-    // Persist collapse state (lg+ only; irrelevant on mobile drawer).
-    useEffect(() => {
-        try {
-            const saved = localStorage.getItem('sidebar-collapsed');
-            if (saved === '1') setCollapsed(true);
-        } catch { /* localStorage may throw in private mode */ }
-    }, []);
-
-    const toggleCollapse = () => {
-        setCollapsed((prev) => {
-            const next = !prev;
-            try { localStorage.setItem('sidebar-collapsed', next ? '1' : '0'); } catch {}
-            return next;
-        });
-    };
-
-    const handleLogout = (e) => {
-        e.preventDefault();
-        window.location.href = '/logout';
-    };
-
-    // Close mobile drawer on route change.
-    useEffect(() => {
-        if (open && typeof onClose === 'function') {
-            const handler = () => onClose();
-            window.addEventListener('resize', handler);
-            return () => window.removeEventListener('resize', handler);
-        }
-    }, [open, onClose]);
-
-    return (
-        <>
-            {/* Mobile backdrop */}
-            {open && (
-                <div
-                    className="fixed inset-0 z-40 bg-slate-900/40 lg:hidden print:hidden"
-                    onClick={onClose}
-                    aria-hidden="true"
-                />
-            )}
-
-            <aside
-                className={[
-                    'fixed top-0 left-0 z-50 h-[100dvh] flex flex-col bg-white border-r border-slate-200 transition-all duration-200 print:hidden',
-                    // Width: collapsed shows icon-only on lg+; mobile drawer always full width
-                    collapsed ? 'lg:w-16' : 'lg:w-64',
-                    'w-72', // mobile drawer width
-                    // Slide: hidden on mobile unless open
-                    open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
-                ].join(' ')}
+  return (
+    <>
+      <aside
+        className={`fixed left-0 top-0 h-[100dvh] bg-white border-r border-slate-200 z-40 transition-all duration-300 ease-out lg:translate-x-0 ${
+          collapsed ? 'w-16' : 'w-64'
+        } ${open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
+        style={{ width: collapsed ? '4rem' : '16rem' }}
+      >
+        <div className="flex flex-col h-full">
+          {/* Header */}
+          <div className="flex items-center justify-between h-16 px-4 border-b border-slate-200 shrink-0">
+            <Link href="/dashboard" className="flex items-center gap-2 shrink-0" onClick={onClose}>
+              <DiskominfoLogo variant="light-bg" className={collapsed ? 'h-7' : 'h-8'} />
+              {!collapsed && (
+                <span className="font-black text-sm text-slate-900 truncate">SIM-BIMTEK</span>
+              )}
+            </Link>
+            <button
+              onClick={() => setCollapsed(!collapsed)}
+              className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors lg:hidden"
+              aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             >
-                {/* HEADER: logo + role badge + collapse toggle (lg+ only) */}
-                <div className="flex items-center justify-between gap-2 h-16 px-4 border-b border-slate-200 shrink-0">
-                    <Link href="/dashboard" className="flex items-center gap-2 min-w-0" onClick={onClose}>
-                        <DiskominfoLogo variant="light-bg" className={collapsed ? 'lg:hidden' : ''} />
-                        {collapsed && (
-                            <span className="hidden lg:flex items-center justify-center w-8 h-8 rounded-lg bg-blue-900 text-white text-xs font-bold shrink-0">
-                                B
-                            </span>
-                        )}
-                    </Link>
-                    <div className="flex items-center gap-1.5">
-                        {!collapsed && (
-                            <span className={`hidden lg:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider ${roleMeta.badge}`}>
-                                {roleMeta.label}
-                            </span>
-                        )}
-                        {/* Close button — mobile only */}
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="lg:hidden p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors"
-                            aria-label="Tutup menu"
-                        >
-                            <X className="w-5 h-5" />
-                        </button>
-                    </div>
-                </div>
+              {collapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
+            </button>
+          </div>
 
-                {/* NAV: grouped, scrollable */}
-                <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-5">
-                    {groups.map((group) => (
-                        <div key={group.label} className="space-y-0.5">
-                            {!collapsed && (
-                                <p className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                                    {group.label}
-                                </p>
-                            )}
-                            {group.items.map((item) => {
-                                const active = isActive(current, item.href);
-                                const Icon = item.icon;
-                                return (
-                                    <Link
-                                        key={item.href}
-                                        href={item.href}
-                                        onClick={onClose}
-                                        title={collapsed ? item.label : undefined}
-                                        className={[
-                                            'group relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                                            collapsed ? 'lg:justify-center lg:px-0' : '',
-                                            active
-                                                ? 'bg-slate-100 text-slate-900'
-                                                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
-                                        ].join(' ')}
-                                    >
-                                        {/* Active accent bar */}
-                                        {active && (
-                                            <span
-                                                className={[
-                                                    'absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-full bg-blue-900',
-                                                    collapsed ? 'lg:left-1' : '',
-                                                ].join(' ')}
-                                                aria-hidden="true"
-                                            />
-                                        )}
-                                        <Icon className={[
-                                            'w-4 h-4 shrink-0',
-                                            active ? 'text-blue-900' : 'text-slate-400 group-hover:text-slate-600',
-                                        ].join(' ')} />
-                                        {!collapsed && <span className="truncate">{item.label}</span>}
-                                    </Link>
-                                );
-                            })}
-                        </div>
-                    ))}
-                </nav>
+          {/* Role Badge (collapsed hides text) */}
+          {!collapsed && (
+            <div className="px-4 py-3 border-b border-slate-200">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 text-blue-900 border border-blue-100">
+                <RoleIcon className="w-3.5 h-3.5 text-blue-700" />
+                <span className="font-black text-xs uppercase tracking-wider">{roleLabel}</span>
+              </div>
+            </div>
+          )}
 
-                {/* FOOTER: collapse toggle (lg+) + user mini-card + logout */}
-                <div className="border-t border-slate-200 p-2 space-y-1 shrink-0">
-                    {/* Collapse toggle — lg+ only */}
-                    <button
-                        type="button"
-                        onClick={toggleCollapse}
-                        className="hidden lg:flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
-                        title={collapsed ? 'Lebarkan sidebar' : 'Perkecil sidebar'}
-                    >
-                        {collapsed
-                            ? <PanelLeftOpen className="w-4 h-4 shrink-0 mx-auto" />
-                            : <PanelLeftClose className="w-4 h-4 shrink-0" />}
-                        {!collapsed && <span className="truncate">Perkecil</span>}
-                    </button>
-
-                    {/* User mini-card */}
+          {/* Navigation */}
+          <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-4" role="navigation" aria-label="Main navigation">
+            {groups.map((group, gIdx) => (
+              <div key={gIdx} className="space-y-1">
+                {!collapsed && (
+                  <div className="px-2">
+                    <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                      {group.label}
+                    </p>
+                  </div>
+                )}
+                {group.items.map((item, iIdx) => {
+                  const active = isActive(item.href, item.prefix);
+                  const Icon = item.icon;
+                  return (
                     <Link
-                        href="/profile"
-                        onClick={onClose}
-                        className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm hover:bg-slate-50 transition-colors ${collapsed ? 'lg:justify-center lg:px-0' : ''}`}
+                      key={`${gIdx}-${iIdx}`}
+                      href={item.href}
+                      onClick={onClose}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${
+                        active
+                          ? 'bg-slate-100 text-slate-900 font-black border-l-2 border-blue-900'
+                          : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-semibold'
+                      } ${collapsed ? 'justify-center' : ''}`}
+                      title={collapsed ? item.label : undefined}
+                      aria-current={active ? 'page' : undefined}
                     >
-                        <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center text-xs font-bold shrink-0">
-                            {user.name?.charAt(0) || 'U'}
-                        </div>
-                        {!collapsed && (
-                            <div className="min-w-0 text-left">
-                                <p className="text-xs font-semibold text-slate-900 truncate">{user.name}</p>
-                                <p className="text-[10px] text-slate-500 truncate">{user.email}</p>
-                            </div>
-                        )}
+                      <Icon className={`w-5 h-5 shrink-0 ${active ? 'text-blue-900' : 'text-slate-400'}`} />
+                      {!collapsed && <span className="truncate">{item.label}</span>}
                     </Link>
+                  );
+                })}
+              </div>
+            ))}
+          </nav>
 
-                    {/* Logout */}
-                    <button
-                        type="button"
-                        onClick={handleLogout}
-                        className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-rose-600 hover:bg-rose-50 transition-colors ${collapsed ? 'lg:justify-center lg:px-0' : ''}`}
-                        title={collapsed ? 'Keluar' : undefined}
-                    >
-                        <LogOut className="w-4 h-4 shrink-0" />
-                        {!collapsed && <span>Keluar</span>}
-                    </button>
+          {/* Footer: User Card + Logout */}
+          {!collapsed && (
+            <div className="p-3 border-t border-slate-200 space-y-2">
+              <div className="flex items-center gap-3 p-2 bg-slate-50 rounded-xl border border-slate-100">
+                <div className="w-10 h-10 rounded-xl bg-blue-900 text-white font-bold flex items-center justify-center shrink-0 overflow-hidden">
+                  {user?.avatar ? (
+                    <img src={user.avatar} alt={user?.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-sm">{user?.name?.charAt(0) || 'U'}</span>
+                  )}
                 </div>
-            </aside>
-        </>
-    );
+                <div className="flex-1 min-w-0 overflow-hidden">
+                  <strong className="block text-xs font-black text-slate-900 truncate">{user?.name || 'User'}</strong>
+                  <span className="text-[10px] text-blue-700 font-extrabold uppercase flex items-center gap-1">
+                    <RoleIcon className="w-3 h-3" />
+                    <span>{roleLabel}</span>
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => window.location.href = '/logout'}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-rose-600 bg-rose-50 border border-rose-200 font-bold text-xs hover:bg-rose-100 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Keluar</span>
+              </button>
+            </div>
+          )}
+        </div>
+      </aside>
+
+      {/* Backdrop for mobile drawer */}
+      {open && !collapsed && (
+        <div
+          className="fixed inset-0 z-30 bg-slate-900/40 backdrop-blur-sm lg:hidden"
+          onClick={onClose}
+        />
+      )}
+    </>
+  );
 }

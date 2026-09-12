@@ -11,7 +11,6 @@ import {
   Printer, 
   ArrowLeft,
   CheckCircle,
-  Sparkles,
   Camera,
   AlertCircle,
   Lock

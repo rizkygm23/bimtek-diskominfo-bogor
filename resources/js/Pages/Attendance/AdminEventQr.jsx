@@ -3,22 +3,22 @@ import { Link } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import { QRCodeSVG } from 'qrcode.react';
 import axios from 'axios';
-import { 
-  ArrowLeft, 
-  Printer, 
-  Sparkles, 
-  MapPin, 
-  Calendar, 
-  CheckCircle2, 
-  Maximize2, 
-  Minimize2, 
-  RefreshCw, 
-  Clock, 
+import {
+  ArrowLeft,
+  Printer,
+  MapPin,
+  Calendar,
+  CheckCircle2,
+  Maximize2,
+  Minimize2,
+  RefreshCw,
+  Clock,
   Users,
   ShieldCheck,
   Flame,
   Zap,
-  Radio
+  Radio,
+  QrCode
 } from 'lucide-react';
 import LiveConnectionBadge from '@/Components/LiveConnectionBadge';
 
@@ -242,7 +242,7 @@ export default function AdminEventQr({ event, session: initialSession, attendanc
         {/* TODO: flatten hero — see PageHeader.jsx (QR projector card: needs solid bg-slate-900 for print contrast, not gradient) */}
         <div
           ref={qrContainerRef}
-          className={`bg-gradient-to-b from-blue-950 via-slate-900 to-blue-900 text-white border-4 border-amber-400 rounded-3xl p-6 md:p-10 shadow-2xl text-center space-y-6 print:border-slate-900 print:text-slate-900 print:bg-white transition-all relative overflow-hidden ${
+          className={`bg-slate-900 text-white border-4 border-amber-400 rounded-3xl p-6 md:p-10  text-center space-y-6 print:border-slate-900 print:text-slate-900 print:bg-white transition-all relative overflow-hidden ${
             isFullscreen ? 'fixed inset-0 z-50 rounded-none border-none p-6 md:p-12 overflow-y-auto flex flex-col justify-center items-center h-screen w-screen' : ''
           }`}
         >
@@ -251,7 +251,7 @@ export default function AdminEventQr({ event, session: initialSession, attendanc
           {isFullscreen && (
             <button
               onClick={toggleFullscreen}
-              className="fixed top-5 right-5 z-50 px-4 py-2 bg-amber-400 text-blue-950 text-xs font-black rounded-2xl shadow-2xl flex items-center gap-2 border-2 border-white cursor-pointer hover:bg-amber-300 transition-all"
+              className="fixed top-5 right-5 z-50 px-4 py-2 bg-amber-400 text-blue-950 text-xs font-black rounded-2xl  flex items-center gap-2 border-2 border-white cursor-pointer hover:bg-amber-300 transition-all"
             >
               <Minimize2 className="w-4 h-4" />
               <span>Keluar Fullscreen (Esc)</span>
@@ -260,9 +260,9 @@ export default function AdminEventQr({ event, session: initialSession, attendanc
 
           {/* CELEBRATORY REAL-TIME CHECK-IN BANNER */}
           {latestCheckIn && (
-            <div className="fixed top-8 left-1/2 -translate-x-1/2 z-50 bg-emerald-500 text-slate-950 px-6 py-3 rounded-full shadow-2xl border-2 border-white flex items-center gap-2.5 font-black text-sm animate-bounce">
-              <Sparkles className="w-5 h-5 text-amber-950" />
-              <span>🎉 {latestCheckIn.participant_name} ({latestCheckIn.role_label}) Berhasil Presensi!</span>
+            <div className="fixed top-8 left-1/2 -translate-x-1/2 z-50 bg-emerald-500 text-slate-950 px-6 py-3 rounded-full  border-2 border-white flex items-center gap-2.5 font-black text-sm animate-bounce">
+              <CheckCircle2 className="w-5 h-5 text-amber-950" />
+              <span>{latestCheckIn.participant_name} ({latestCheckIn.role_label}) Berhasil Presensi!</span>
             </div>
           )}
 
@@ -278,7 +278,7 @@ export default function AdminEventQr({ event, session: initialSession, attendanc
 
             <div className="flex items-center justify-center gap-2 pt-1">
               <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-amber-400 text-blue-950 text-xs font-black uppercase tracking-wider shadow-md">
-                <Sparkles className="w-4 h-4" />
+                <QrCode className="w-4 h-4" />
                 <span>QR CODE PRESENSI RESMI HARI-H</span>
               </div>
               <LiveConnectionBadge isConnected={isConnected} />
@@ -297,7 +297,7 @@ export default function AdminEventQr({ event, session: initialSession, attendanc
 
           {/* CRISP QR CODE DISPLAY */}
           <div className="w-full max-w-md mx-auto">
-            <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-2xl border-4 border-amber-300 text-center relative group">
+            <div className="bg-white p-6 sm:p-8 rounded-3xl  border-4 border-amber-300 text-center relative group">
               
               <QRCodeSVG
                 value={qrPayload}
@@ -318,7 +318,7 @@ export default function AdminEventQr({ event, session: initialSession, attendanc
                 {/* TODO: flatten hero — see PageHeader.jsx (progress bar: bg-blue-900, not rainbow gradient) */}
                 <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden border border-slate-200">
                   <div
-                    className="h-full bg-gradient-to-r from-emerald-500 via-amber-400 to-blue-600 transition-all duration-1000 ease-linear rounded-full"
+                    className="h-full bg-blue-900 transition-all duration-1000 ease-linear rounded-full"
                     style={{ width: `${progressPercent}%` }}
                   ></div>
                 </div>

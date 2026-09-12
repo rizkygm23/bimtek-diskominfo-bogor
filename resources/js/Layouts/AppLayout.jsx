@@ -6,6 +6,33 @@ import MobileTopBar from '../Components/MobileTopBar';
 import MobileBottomNav from '../Components/MobileBottomNav';
 import { Phone, Mail, MapPin, Clock, X, CheckCircle2, AlertCircle } from 'lucide-react';
 
+// Flat SVG social icons (lucide 1.28 doesn't have Facebook/Twitter/Youtube/Instagram)
+const FacebookIcon = (props) => (
+  <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" {...props}>
+    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+  </svg>
+);
+
+const TwitterIcon = (props) => (
+  <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" {...props}>
+    <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z" />
+  </svg>
+);
+
+const YoutubeIcon = (props) => (
+  <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" {...props}>
+    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+  </svg>
+);
+
+const InstagramIcon = (props) => (
+  <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" {...props}>
+    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+    <circle cx="17.5" cy="6.5" r="1" />
+  </svg>
+);
+
 export default function AppLayout({ children, title }) {
   const { auth, flash } = usePage().props;
   const currentUser = auth?.user;
@@ -157,17 +184,17 @@ export default function AppLayout({ children, title }) {
 
           {/* SOCIAL MEDIA LINKS */}
           <div className="flex items-center gap-1.5 shrink-0">
-            <a href="https://facebook.com/diskominfo.bogorkab" target="_blank" rel="noreferrer" className="w-5 h-5 rounded-full bg-slate-800 hover:bg-blue-600 text-white flex items-center justify-center text-[9px] font-black transition-colors" title="Facebook">
-              f
+            <a href="https://facebook.com/diskominfo.bogorkab" target="_blank" rel="noreferrer" className="w-5 h-5 rounded-full bg-slate-800 hover:bg-blue-900 text-white flex items-center justify-center transition-colors" title="Facebook">
+              <FacebookIcon />
             </a>
-            <a href="https://x.com/diskominfo_bogor" target="_blank" rel="noreferrer" className="w-5 h-5 rounded-full bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center text-[9px] font-black transition-colors" title="Twitter / X">
-              𝕏
+            <a href="https://x.com/diskominfo_bogor" target="_blank" rel="noreferrer" className="w-5 h-5 rounded-full bg-slate-800 hover:bg-blue-900 text-white flex items-center justify-center transition-colors" title="Twitter / X">
+              <TwitterIcon />
             </a>
-            <a href="https://youtube.com/@diskominfokabupatenbogor" target="_blank" rel="noreferrer" className="w-5 h-5 rounded-full bg-slate-800 hover:bg-rose-600 text-white flex items-center justify-center text-[9px] font-black transition-colors" title="YouTube">
-              ▶
+            <a href="https://youtube.com/@diskominfokabupatenbogor" target="_blank" rel="noreferrer" className="w-5 h-5 rounded-full bg-slate-800 hover:bg-blue-900 text-white flex items-center justify-center transition-colors" title="YouTube">
+              <YoutubeIcon />
             </a>
-            <a href="https://instagram.com/diskominfo.bogorkab" target="_blank" rel="noreferrer" className="w-5 h-5 rounded-full bg-slate-800 hover:bg-purple-600 text-white flex items-center justify-center text-[9px] font-black transition-colors" title="Instagram">
-              📷
+            <a href="https://instagram.com/diskominfo.bogorkab" target="_blank" rel="noreferrer" className="w-5 h-5 rounded-full bg-slate-800 hover:bg-blue-900 text-white flex items-center justify-center transition-colors" title="Instagram">
+              <InstagramIcon />
             </a>
           </div>
 
@@ -237,10 +264,18 @@ export default function AppLayout({ children, title }) {
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] font-bold">f</span>
-              <span className="w-6 h-6 rounded-full bg-slate-800 text-white flex items-center justify-center text-[10px] font-bold">𝕏</span>
-              <span className="w-6 h-6 rounded-full bg-rose-600 text-white flex items-center justify-center text-[10px] font-bold">▶</span>
-              <span className="w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center text-[10px] font-bold">📷</span>
+              <a href="https://facebook.com/diskominfo.bogorkab" target="_blank" rel="noreferrer" className="w-6 h-6 rounded-full bg-slate-700 hover:bg-blue-900 text-white flex items-center justify-center transition-colors" title="Facebook">
+                <FacebookIcon />
+              </a>
+              <a href="https://x.com/diskominfo_bogor" target="_blank" rel="noreferrer" className="w-6 h-6 rounded-full bg-slate-700 hover:bg-blue-900 text-white flex items-center justify-center transition-colors" title="Twitter / X">
+                <TwitterIcon />
+              </a>
+              <a href="https://youtube.com/@diskominfokabupatenbogor" target="_blank" rel="noreferrer" className="w-6 h-6 rounded-full bg-slate-700 hover:bg-blue-900 text-white flex items-center justify-center transition-colors" title="YouTube">
+                <YoutubeIcon />
+              </a>
+              <a href="https://instagram.com/diskominfo.bogorkab" target="_blank" rel="noreferrer" className="w-6 h-6 rounded-full bg-slate-700 hover:bg-blue-900 text-white flex items-center justify-center transition-colors" title="Instagram">
+                <InstagramIcon />
+              </a>
             </div>
           </div>
         </div>

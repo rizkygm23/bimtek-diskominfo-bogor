@@ -78,7 +78,7 @@ export default function Speakers({ speakers }) {
         <div className="bg-white border border-slate-200 p-6 rounded-3xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-900 text-xs font-bold mb-1">
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+              <FileCheck className="w-3.5 h-3.5 text-amber-500" />
               <span>Verifikasi Kelengkapan Berkas Narasumber</span>
             </div>
             <h1 className="text-xl font-black text-slate-900 flex items-center gap-2">
