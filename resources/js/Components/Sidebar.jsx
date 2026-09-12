@@ -32,59 +32,83 @@ export default function Sidebar({ open, onClose }) {
 
   const navGroups = {
     admin: [
-      { label: 'Utama', items: [
-        { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-        { href: '/events', label: 'Katalog BIMTEK', icon: Calendar, prefix: true },
-      ]},
-      { label: 'Kegiatan', items: [
-        { href: '/admin/verifications', label: 'Verifikasi Data', icon: ShieldCheck, prefix: true },
-        { href: '/attendance/scan', label: 'Presensi Hari-H', icon: Camera, prefix: true },
-      ]},
-      { label: 'Keuangan', items: [
-        { href: '/admin/payments', label: 'Honor & Pajak', icon: CreditCard, prefix: true },
-        { href: '/admin/tax-settings', label: 'Tarif PPh 21', icon: Sliders },
-      ]},
-      { label: 'Laporan', items: [
-        { href: '/admin/report-center', label: 'Pusat Laporan', icon: BarChart3 },
-        { href: '/admin/reports/participants', label: 'Rekap Peserta', icon: FileSpreadsheet },
-        { href: '/admin/reports/speakers', label: 'Rekap Narasumber', icon: FileText },
-        { href: '/admin/reports/honorarium', label: 'Cetak Honorarium', icon: FileText },
-      ]},
-      { label: 'Sistem', items: [
-        { href: '/admin/speakers', label: 'Master Pembicara', icon: Users },
-        { href: '/admin/event-history', label: 'Riwayat BIMTEK', icon: History },
-        { href: '/profile', label: 'Profil Saya', icon: User },
-      ]},
+      {
+        label: 'Utama', items: [
+          { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+          { href: '/events', label: 'Katalog BIMTEK', icon: Calendar, prefix: true },
+        ]
+      },
+      {
+        label: 'Kegiatan', items: [
+          { href: '/admin/verifications', label: 'Verifikasi Data', icon: ShieldCheck, prefix: true },
+          { href: '/attendance/scan', label: 'Presensi Hari-H', icon: Camera, prefix: true },
+        ]
+      },
+      {
+        label: 'Keuangan', items: [
+          { href: '/admin/payments', label: 'Honor & Pajak', icon: CreditCard, prefix: true },
+          { href: '/admin/tax-settings', label: 'Tarif PPh 21', icon: Sliders },
+        ]
+      },
+      {
+        label: 'Laporan', items: [
+          { href: '/admin/report-center', label: 'Pusat Laporan', icon: BarChart3 },
+          { href: '/admin/reports/participants', label: 'Rekap Peserta', icon: FileSpreadsheet },
+          { href: '/admin/reports/speakers', label: 'Rekap Narasumber', icon: FileText },
+          { href: '/admin/reports/honorarium', label: 'Cetak Honorarium', icon: FileText },
+        ]
+      },
+      {
+        label: 'Sistem', items: [
+          { href: '/admin/speakers', label: 'Master Pembicara', icon: Users },
+          { href: '/admin/event-history', label: 'Riwayat BIMTEK', icon: History },
+          { href: '/profile', label: 'Profil Saya', icon: User },
+        ]
+      },
     ],
     pembicara: [
-      { label: 'Utama', items: [
-        { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-        { href: '/events', label: 'Jadwal BIMTEK', icon: Calendar, prefix: true },
-      ]},
-      { label: 'Kegiatan', items: [
-        { href: '/attendance/scan', label: 'Presensi Hari-H', icon: Camera, prefix: true },
-        { href: '/my-certificates', label: 'Sertifikat Saya', icon: BarChart3 },
-      ]},
-      { label: 'Akun', items: [
-        { href: '/profile', label: 'Profil & Rekening', icon: User },
-      ]},
+      {
+        label: 'Utama', items: [
+          { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+          { href: '/events', label: 'Jadwal BIMTEK', icon: Calendar, prefix: true },
+        ]
+      },
+      {
+        label: 'Kegiatan', items: [
+          { href: '/attendance/scan', label: 'Presensi Hari-H', icon: Camera, prefix: true },
+          { href: '/my-certificates', label: 'Sertifikat Saya', icon: BarChart3 },
+        ]
+      },
+      {
+        label: 'Akun', items: [
+          { href: '/profile', label: 'Profil & Rekening', icon: User },
+        ]
+      },
     ],
     user: [
-      { label: 'Utama', items: [
-        { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-        { href: '/events', label: 'Katalog BIMTEK', icon: Calendar, prefix: true },
-      ]},
-      { label: 'Kegiatan', items: [
-        { href: '/attendance/scan', label: 'Presensi Hari-H', icon: Camera, prefix: true },
-        { href: '/my-certificates', label: 'Sertifikat Saya', icon: BarChart3 },
-      ]},
-      { label: 'Akun', items: [
-        { href: '/profile', label: 'Profil', icon: User },
-      ]},
+      {
+        label: 'Utama', items: [
+          { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+          { href: '/events', label: 'Katalog BIMTEK', icon: Calendar, prefix: true },
+        ]
+      },
+      {
+        label: 'Kegiatan', items: [
+          { href: '/attendance/scan', label: 'Presensi Hari-H', icon: Camera, prefix: true },
+          { href: '/my-certificates', label: 'Sertifikat Saya', icon: BarChart3 },
+        ]
+      },
+      {
+        label: 'Akun', items: [
+          { href: '/profile', label: 'Profil', icon: User },
+        ]
+      },
     ],
   };
 
-  const groups = navGroups[role] || navGroups.user;
+  // Explicit role→menu mapping. NO fallback to 'user' if role is admin/pembicara —
+  // prevents privilege confusion if role value is unexpected (null/undefined/case).
+  const groups = isAdmin ? navGroups.admin : isPembicara ? navGroups.pembicara : navGroups.user;
   const roleLabel = isAdmin ? 'Admin' : isPembicara ? 'Pembicara' : 'Peserta';
   const RoleIcon = isAdmin ? CheckCircle2 : isPembicara ? Mic : User;
 
@@ -99,16 +123,14 @@ export default function Sidebar({ open, onClose }) {
       )}
 
       <aside
-        className={`fixed left-0 top-0 h-[100dvh] w-72 lg:w-64 bg-white border-r border-slate-200 z-50 transition-transform duration-300 ease-out print:hidden ${
-          open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        }`}
+        className={`fixed left-0 top-0 h-[100dvh] w-72 lg:w-64 bg-white border-r border-slate-200 z-50 transition-transform duration-300 ease-out print:hidden ${open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+          }`}
       >
         <div className="flex flex-col h-full">
           {/* Header — logo + close button (mobile only) */}
           <div className="flex items-center justify-between h-16 px-4 border-b border-slate-200 shrink-0">
             <Link href="/dashboard" className="flex items-center gap-2 shrink-0" onClick={onClose}>
               <DiskominfoLogo variant="light-bg" className="h-8" />
-              <span className="font-black text-sm text-slate-900 truncate">SIM-BIMTEK</span>
             </Link>
             <button
               onClick={onClose}
@@ -144,11 +166,10 @@ export default function Sidebar({ open, onClose }) {
                       key={`${gIdx}-${iIdx}`}
                       href={item.href}
                       onClick={onClose}
-                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${
-                        active
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${active
                           ? 'bg-slate-100 text-slate-900 font-black border-l-2 border-blue-900'
                           : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-semibold'
-                      }`}
+                        }`}
                     >
                       <Icon className={`w-5 h-5 shrink-0 ${active ? 'text-blue-900' : 'text-slate-400'}`} />
                       <span className="truncate">{item.label}</span>
