@@ -118,6 +118,8 @@ export default function Scan({ events, myEvents, selectedEventId, recentAttendan
   const activeEvent = availableEvents.find(e => Number(e.id) === Number(activeEventId)) || availableEvents[0];
 
   const [cameraActive, setCameraActive] = useState(false);
+  const [cameraStarting, setCameraStarting] = useState(false);
+  const cameraStartingRef = useRef(false);
   const [facingMode, setFacingMode] = useState('environment');
   const [cameraError, setCameraError] = useState(null);
   const [scannedSuccess, setScannedSuccess] = useState(false);
@@ -256,14 +258,31 @@ export default function Scan({ events, myEvents, selectedEventId, recentAttendan
   };
 
   const startCamera = async () => {
+    // Guard anti double-tap: di HP, tap ganda memicu dua getUserMedia
+    // bersamaan — prompt izin yang pertama langsung dibatalkan oleh yang
+    // kedua ("ngeglitch" & hilang sebelum user klik Terima/Tolak).
+    if (cameraStartingRef.current) return;
+    cameraStartingRef.current = true;
+    setCameraStarting(true);
     setCameraError(null);
     try {
       await safeStopScanner();
 
       const { Html5Qrcode } = await import('html5-qrcode');
+
+      // Tampilkan container SEBELUM start() agar <video> yang html5-qrcode
+      // buat di dalamnya langsung punya dimensi nyata. Jika container masih
+      // display:none saat start() dipanggil, <video> ukurannya 0x0 — sebagian
+      // peramban mobile (Chrome Android) langsung mencabut stream / menutup
+      // prompt izin kamera sesaat setelah muncul. requestAnimationFrame ganda
+      // memastikan React sudah flush DOM + browser sudah lay out elemennya.
+      setCameraActive(true);
+      await new Promise((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(resolve))
+      );
+
       const html5QrCode = new Html5Qrcode("qr-reader-container");
       html5QrCodeRef.current = html5QrCode;
-      setCameraActive(true);
 
       await html5QrCode.start(
         { facingMode },
@@ -284,6 +303,9 @@ export default function Scan({ events, myEvents, selectedEventId, recentAttendan
     } catch (err) {
       setCameraError('Izin kamera ditolak atau peramban membatasi kamera pada jaringan HTTP lokal. Jika kamera bermasalah, mohon hubungi Admin untuk dicatatkan presensi secara manual.');
       setCameraActive(false);
+    } finally {
+      setCameraStarting(false);
+      cameraStartingRef.current = false;
     }
   };
 
@@ -815,10 +837,11 @@ export default function Scan({ events, myEvents, selectedEventId, recentAttendan
                               <button
                                 type="button"
                                 onClick={startCamera}
-                                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md cursor-pointer transition-transform active:scale-95 flex items-center justify-center gap-2"
+                                disabled={cameraStarting}
+                                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-black text-xs shadow-md cursor-pointer transition-transform active:scale-95 flex items-center justify-center gap-2"
                               >
                                 <Camera className="w-4 h-4 text-amber-300" />
-                                <span>Live Kamera HP</span>
+                                <span>{cameraStarting ? 'Memulai kamera…' : 'Live Kamera HP'}</span>
                               </button>
 
                               {/* Hidden file input for QR scan from photo (works on HTTP!).
