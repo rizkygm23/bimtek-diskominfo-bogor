@@ -30,6 +30,11 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 # Copy application source
 COPY . .
 
+# F2 (SECURITY_CHECK.md): limit upload PHP harus >= batas validasi aplikasi
+# (KTP 5MB, materi 20MB, ZIP sertifikat 100MB) — default php:8.2 hanya 2M.
+RUN printf "upload_max_filesize=110M\npost_max_size=120M\nmax_execution_time=120\n" \
+    > /usr/local/etc/php/conf.d/zz-uploads.ini
+
 # Install PHP deps (no-dev, optimized for production)
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 

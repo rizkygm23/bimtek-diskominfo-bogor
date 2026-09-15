@@ -69,9 +69,7 @@ export default function Login() {
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <label className="block text-xs font-extrabold text-slate-800">Password</label>
-              <Link href="#" className="text-[11px] font-bold text-blue-900 hover:underline">
-                Lupa Password?
-              </Link>
+              {/* F4: link "Lupa Password?" dihapus — fitur reset password belum diimplementasi (lihat SECURITY_CHECK.md) */}
             </div>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">

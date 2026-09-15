@@ -4,6 +4,12 @@
 # Order matters: migrate FIRST (creates tables), then safe-to-fail cache clears.
 set -e
 
+# F3 (SECURITY_CHECK.md): default aman produksi — env Railway masih bisa menimpa.
+# Wajib SEBELUM config:cache agar nilai ter-bake ke config cache.
+export APP_DEBUG="${APP_DEBUG:-false}"
+export SESSION_SECURE_COOKIE="${SESSION_SECURE_COOKIE:-true}"
+echo "==> Security defaults: APP_DEBUG=$APP_DEBUG SESSION_SECURE_COOKIE=$SESSION_SECURE_COOKIE"
+
 echo "==> Clearing config cache (non-fatal)..."
 php artisan config:clear || true
 

@@ -22,15 +22,16 @@ Route::get('/', [BimtekEventController::class, 'publicLanding'])->name('home');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [AuthController::class, 'login']);
+    // F1 (SECURITY_CHECK.md): throttle anti brute-force
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 
     // SEPARATE REGISTRATION ROUTES
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
     Route::get('/register/choice', [AuthController::class, 'showRegister'])->name('register.choice');
     Route::get('/register/peserta', [AuthController::class, 'showRegisterPeserta'])->name('register.peserta');
-    Route::post('/register/peserta', [AuthController::class, 'registerPeserta'])->name('register.peserta.store');
+    Route::post('/register/peserta', [AuthController::class, 'registerPeserta'])->name('register.peserta.store')->middleware('throttle:10,1');
     Route::get('/register/pembicara', [AuthController::class, 'showRegisterPembicara'])->name('register.pembicara');
-    Route::post('/register/pembicara', [AuthController::class, 'registerPembicara'])->name('register.pembicara.store');
+    Route::post('/register/pembicara', [AuthController::class, 'registerPembicara'])->name('register.pembicara.store')->middleware('throttle:10,1');
 });
 
 // QUICK SWITCH FOR DEMO TESTING - Only available for admin role

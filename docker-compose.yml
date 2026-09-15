@@ -26,6 +26,8 @@ services:
     container_name: bimtek-db
     restart: unless-stopped
     environment:
+      # ⚠️ F5 (SECURITY_CHECK.md): password ini HANYA untuk lingkungan lokal dev.
+      # Jangan pernah memakai nilai ini di staging/produksi — gunakan secret manager.
       MYSQL_ROOT_PASSWORD: rootpass
       MYSQL_DATABASE: bimtek
       MYSQL_USER: bimtek

@@ -24,6 +24,10 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install pdo pdo_mysql pdo_sqlite zip gd mbstring xml bcmath \
     && rm -rf /var/lib/apt/lists/*
 
+# F2 (SECURITY_CHECK.md): limit upload PHP >= batas validasi app (default 2M terlalu kecil)
+RUN printf "upload_max_filesize=110M\npost_max_size=120M\nmax_execution_time=120\n" \
+    > /usr/local/etc/php/conf.d/zz-uploads.ini
+
 # Node 20 untuk npm run dev (Vite HMR) bila perlu build ulang di container.
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs
