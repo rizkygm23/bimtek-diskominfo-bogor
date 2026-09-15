@@ -1,0 +1,42 @@
+# Development image untuk Laravel.
+# Berbeda dari Dockerfile (production Railway): ini include dev deps,
+# tidak cache config (supaya perubahan .env langsung efektif), dan
+# menjalankan php artisan serve langsung via entrypoint dev.
+
+FROM php:8.2-cli
+
+WORKDIR /var/www/html
+
+# Extensions yang dibutuhkan app (pdo_mysql utamanya untuk MySQL container).
+RUN apt-get update && apt-get install -y \
+    git \
+    unzip \
+    zip \
+    libzip-dev \
+    libsqlite3-dev \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    libonig-dev \
+    libxml2-dev \
+    curl \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install pdo pdo_mysql pdo_sqlite zip gd mbstring xml bcmath \
+    && rm -rf /var/lib/apt/lists/*
+
+# Node 20 untuk npm run dev (Vite HMR) bila perlu build ulang di container.
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs
+
+# Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Entrypoint dev: install deps bila belum ada, migrate, lalu serve.
+# Tidak cache config/routes/view — di dev, perubahan kode harus langsung
+# kelihatan tanpa perlu rebuild.
+COPY docker-entrypoint.dev.sh /usr/local/bin/docker-entrypoint.dev.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.dev.sh
+
+EXPOSE 8080
+
+CMD ["/usr/local/bin/docker-entrypoint.dev.sh"]

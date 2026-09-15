@@ -275,7 +275,7 @@ export default function Index({ events, registeredEventIds = [] }) {
                   <div className="space-y-2">
                     <div className="grid grid-cols-2 gap-2">
                       <Link
-                        href={`/admin/events/${item.id}/qr-event`}
+                        href={`/attendance/scan?event_id=${item.id}`}
                         className="py-2 px-3 rounded-xl bg-blue-900 hover:bg-blue-950 text-white text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-xs transition-all text-center"
                       >
                         <QrCode className="w-3.5 h-3.5 text-amber-400" />

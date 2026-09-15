@@ -33,3 +33,6 @@ Thumbs.db
 ehthumbs.db
 .DS_Store
 desktop.ini
+
+# Folder ~ hasil salah ekspansi home directory oleh tool agent
+/~

@@ -1,0 +1,97 @@
+# Development lokal: Laravel app + MySQL + phpMyAdmin.
+# Dipakai karena PHP belum terinstal native di laptop.
+#
+# Cara pakai:
+#   docker compose up -d --build        # build & start (pertama kali agak lama)
+#   docker compose logs -f app         # lihat log artisan serve
+#   docker compose exec app php artisan tinker   # jalankan artisan di dalam container
+#   docker compose down                # stop
+#
+# Akses:
+#   Laravel app    → http://localhost:8080
+#   phpMyAdmin     → http://localhost:8081  (server: db, user: root, pass: rootpass)
+#
+# Setelah container app pertama kali jalan, entrypoint otomatis:
+#   migrate → seed (jika DB kosong) → cache config/routes/views → storage:link → serve
+#
+# Catatan: file project di-mount sebagai volume ke /var/www/html, jadi
+# edit kode di laptop langsung kelihatan di container. Tapi vendor/ dan
+# node_modules/ TIDAK di-mount dari host (dibangun di dalam container
+# via composer install & npm ci) supaya pakai binary yang sesuai OS
+# container (Linux), bukan binary Windows yang bisa kacau di container.
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: bimtek-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: bimtek
+      MYSQL_USER: bimtek
+      MYSQL_PASSWORD: bimtekpass
+    ports:
+      - "3306:3306"
+    volumes:
+      - bimtek-db-data:/var/lib/mysql
+      # Script init: pastikan koneksi pakai caching_sha2_password
+      # (MySQL 8 default, tapi beberapa client butuh eksplisit)
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-prootpass"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  phpmyadmin:
+    image: phpmyadmin:5
+    container_name: bimtek-pma
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      UPLOAD_LIMIT: 64M
+    ports:
+      - "8081:80"
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: bimtek-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Koneksi ke MySQL container. Host = "db" (nama service di compose).
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: bimtek
+      DB_USERNAME: bimtek
+      DB_PASSWORD: bimtekpass
+      # Environment Laravel dasar (akan di-override oleh .env yang di-mount,
+      # kecuali nilai DB_* di atas karena di-set eksplisit di sini).
+      APP_ENV: local
+      APP_DEBUG: true
+      PORT: 8080
+    ports:
+      - "8080:8080"
+    volumes:
+      # Mount source code host → container, JADI edit di laptop langsung
+      # kelihatan. Vendor/node_modules tidak di-mount (di-ignore via
+      # Dockerfile.dev) supaya pakai binary Linux bawaan container.
+      - ./:/var/www/html
+      # Sembunyikan vendor & node_modules host dengan anonymous volume
+      # agar tidak tertimpa oleh mount host (binary Windows vs Linux).
+      - /var/www/html/vendor
+      - /var/www/html/node_modules
+      # Storage persisten supaya file upload & session tidak hilang saat down
+      - bimtek-storage:/var/www/html/storage
+
+volumes:
+  bimtek-db-data:
+  bimtek-storage:
