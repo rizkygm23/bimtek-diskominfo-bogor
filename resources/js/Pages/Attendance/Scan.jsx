@@ -22,6 +22,91 @@ import {
   Search
 } from 'lucide-react';
 
+// Decode QR dari file foto dengan strategi berlapis agar andal di HP:
+// 1) BarcodeDetector native (Chrome/Edge Android) — decoder sistem, paling
+//    kuat untuk foto hasil kamera.
+// 2) html5-qrcode scanFile pada hasil DOWNSCALE foto. scanFile milik
+//    html5-qrcode membuat canvas decode sebesar resolusi foto asli — foto
+//    kamera HP 12–48MP membuat canvas puluhan megapixel yang melebihi batas
+//    canvas browser (Safari ±16,7MP → canvas blank) / terlalu besar untuk
+//    zxing. Frame live kamera hanya ±480p, itulah kenapa live kamera BISA
+//    tapi foto TIDAK.
+// 3) Fallback terakhir: scanFile file asli tanpa downscale.
+// Container decode harus punya dimensi nyata (offscreen, bukan
+// display:none) — lihat komentar pada elemen #qr-file-scan-container di JSX.
+const decodeQrFromPhoto = async (file) => {
+  if ('BarcodeDetector' in window) {
+    try {
+      const detector = new window.BarcodeDetector({ formats: ['qr_code'] });
+      const bitmap = await createImageBitmap(file);
+      try {
+        const results = await detector.detect(bitmap);
+        if (results && results.length > 0 && results[0].rawValue) {
+          return results[0].rawValue;
+        }
+      } finally {
+        if (bitmap.close) bitmap.close();
+      }
+    } catch {
+      // BarcodeDetector tidak tersedia/gagal — lanjut strategi berikutnya.
+    }
+  }
+
+  const { Html5Qrcode } = await import('html5-qrcode');
+  const containerId = 'qr-file-scan-container';
+
+  const scanWithHtml5Qrcode = async (fileToScan) => {
+    const scanner = new Html5Qrcode(containerId);
+    try {
+      return await scanner.scanFile(fileToScan, false);
+    } finally {
+      // Bersihkan <canvas> internal yang scanFile tinggalkan di container,
+      // supaya tidak menumpuk antar percobaan.
+      try { await scanner.clear(); } catch {}
+      const c = document.getElementById(containerId);
+      if (c) c.innerHTML = '';
+    }
+  };
+
+  let bitmap = null;
+  try {
+    bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+  } catch {
+    try { bitmap = await createImageBitmap(file); } catch { bitmap = null; }
+  }
+
+  if (bitmap) {
+    const longest = Math.max(bitmap.width, bitmap.height);
+    // 1600px cukup untuk QR (frame live kamera saja sudah cukup di ±480p);
+    // 2400px cadangan untuk foto jarak jauh yang QR-nya kecil di frame.
+    const targetDims = longest <= 1600 ? [longest] : [1600, Math.min(2400, longest)];
+    try {
+      for (const maxDim of targetDims) {
+        const scale = Math.min(1, maxDim / longest);
+        const w = Math.max(1, Math.round(bitmap.width * scale));
+        const h = Math.max(1, Math.round(bitmap.height * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(bitmap, 0, 0, w, h);
+        const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+        if (!blob) continue;
+        try {
+          const text = await scanWithHtml5Qrcode(
+            new File([blob], 'qr-foto.png', { type: 'image/png' }));
+          if (text) return text;
+        } catch {
+          // Gagal di skala ini — coba skala berikutnya.
+        }
+      }
+    } finally {
+      if (bitmap.close) bitmap.close();
+    }
+  }
+
+  return await scanWithHtml5Qrcode(file);
+};
+
 export default function Scan({ events, myEvents, selectedEventId, recentAttendances, eventRegistrations, myAttendances, gatekeeperStatus }) {
   const { auth, flash } = usePage().props;
   const user = auth?.user || {};
@@ -154,12 +239,26 @@ export default function Scan({ events, myEvents, selectedEventId, recentAttendan
     }
   };
 
+  // html5-qrcode melempar error secara SINKRON ("Cannot stop, scanner is not
+  // running or paused.") bila stop() dipanggil saat scanner sudah berhenti.
+  // Karena throw-nya sinkron (bukan Promise rejection), .catch() TIDAK
+  // menangkapnya — harus try/catch. Null-kan ref di awal supaya stop tidak
+  // pernah terpanggil dobel dari jalur berbeda (scan sukses → unmount, dll).
+  const safeStopScanner = async () => {
+    const scanner = html5QrCodeRef.current;
+    html5QrCodeRef.current = null;
+    if (!scanner || !scanner.isScanning) return;
+    try {
+      await scanner.stop();
+    } catch {
+      // Scanner sudah berhenti / stream kamera sudah tertutup — abaikan.
+    }
+  };
+
   const startCamera = async () => {
     setCameraError(null);
     try {
-      if (html5QrCodeRef.current) {
-        await html5QrCodeRef.current.stop().catch(() => {});
-      }
+      await safeStopScanner();
 
       const { Html5Qrcode } = await import('html5-qrcode');
       const html5QrCode = new Html5Qrcode("qr-reader-container");
@@ -178,9 +277,7 @@ export default function Scan({ events, myEvents, selectedEventId, recentAttendan
             navigator.vibrate([100, 50, 100]);
           }
           handleQrCheckin(decodedText);
-          if (html5QrCodeRef.current) {
-            html5QrCodeRef.current.stop().then(() => setCameraActive(false)).catch(() => setCameraActive(false));
-          }
+          safeStopScanner().finally(() => setCameraActive(false));
         },
         () => {}
       );
@@ -191,11 +288,7 @@ export default function Scan({ events, myEvents, selectedEventId, recentAttendan
   };
 
   const stopCamera = () => {
-    if (html5QrCodeRef.current) {
-      html5QrCodeRef.current.stop().then(() => setCameraActive(false)).catch(() => setCameraActive(false));
-    } else {
-      setCameraActive(false);
-    }
+    safeStopScanner().finally(() => setCameraActive(false));
   };
 
   const toggleCameraFacing = () => {
@@ -205,9 +298,7 @@ export default function Scan({ events, myEvents, selectedEventId, recentAttendan
 
   useEffect(() => {
     return () => {
-      if (html5QrCodeRef.current) {
-        html5QrCodeRef.current.stop().catch(() => {});
-      }
+      safeStopScanner();
     };
   }, []);
 
@@ -227,39 +318,25 @@ export default function Scan({ events, myEvents, selectedEventId, recentAttendan
   };
 
   const fileInputRef = useRef(null);
+  const [fileScanBusy, setFileScanBusy] = useState(false);
 
   const handleImageFileScan = async (e) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || fileScanBusy) return;
 
+    setFileScanBusy(true);
     setCameraError(null);
-    let html5QrCode = null;
     try {
-      const { Html5Qrcode } = await import('html5-qrcode');
-      // PENTING: gunakan container khusus file-scan yang SELALU ada di DOM
-      // dengan dimensi nyata (offscreen, bukan display:none). Sebelumnya pakai
-      // "qr-reader-container" yang ber-class hidden (display:none) saat kamera
-      // mati — html5-qrcode bikin <img>+<canvas> internal di container itu,
-      // tapi browser report dimensi 0 untuk elemen di display:none → decode
-      // gagal → "QR Code tidak terdeteksi". Itu sebabnya foto tidak pernah
-      // berhasil padahal live kamera (elemen sama tapi visible) aman.
-      html5QrCode = new Html5Qrcode("qr-file-scan-container");
-      const decodedText = await html5QrCode.scanFile(file, false);
+      const decodedText = await decodeQrFromPhoto(file);
       playBeep();
       if (typeof navigator !== 'undefined' && navigator.vibrate) {
         navigator.vibrate([100, 50, 100]);
       }
       handleQrCheckin(decodedText);
     } catch (err) {
-      setCameraError('QR Code tidak terdeteksi pada foto tersebut. Pastikan foto QR Code tegak, fokus, dan kontras tinggi. Anda bisa ambil foto ulang, atau gunakan tombol "Live Kamera HP" di samping. Jika tetap bermasalah, mohon hubungi Admin untuk dicatatkan presensi secara manual.');
+      setCameraError('QR Code tidak terdeteksi pada foto tersebut. Pastikan foto QR Code tegak, fokus, kontras tinggi, dan QR terlihat besar di dalam frame (ambil foto dari jarak lebih dekat). Anda bisa ambil foto ulang, atau gunakan tombol "Live Kamera HP" di samping. Jika tetap bermasalah, mohon hubungi Admin untuk dicatatkan presensi secara manual.');
     } finally {
-      // Cleanup: bersihkan <img>/<canvas> internal yang scanFile tinggalkan di
-      // container, supaya tidak menumpuk kalau user scan foto berkali-kali.
-      if (html5QrCode) {
-        try { await html5QrCode.clear(); } catch {}
-        const c = document.getElementById("qr-file-scan-container");
-        if (c) c.innerHTML = '';
-      }
+      setFileScanBusy(false);
       // Reset input value supaya event change tetap fire untuk file yang sama.
       if (e.target) e.target.value = '';
     }
@@ -759,11 +836,12 @@ export default function Scan({ events, myEvents, selectedEventId, recentAttendan
 
                               <button
                                 type="button"
+                                disabled={fileScanBusy}
                                 onClick={() => fileInputRef.current?.click()}
-                                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-blue-900 hover:bg-blue-800 text-white font-black text-xs shadow-md cursor-pointer transition-transform active:scale-95 flex items-center justify-center gap-2"
+                                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-blue-900 hover:bg-blue-800 disabled:opacity-60 disabled:cursor-not-allowed text-white font-black text-xs shadow-md cursor-pointer transition-transform active:scale-95 flex items-center justify-center gap-2"
                               >
                                 <QrCode className="w-4 h-4 text-amber-300" />
-                                <span>Foto QR Code (Kamera HP)</span>
+                                <span>{fileScanBusy ? 'Memeriksa foto…' : 'Foto QR Code (Kamera HP)'}</span>
                               </button>
                             </div>
                           </div>

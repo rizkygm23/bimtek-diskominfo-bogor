@@ -374,13 +374,21 @@ export default function Index({ events, registeredEventIds = [] }) {
                         </div>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <Link
                           href={`/events/${item.id}/register`}
-                          className="flex-1 py-2.5 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-black flex items-center justify-center gap-1.5 shadow-xs transition-all"
+                          className="flex-1 min-w-[8rem] py-2.5 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-black flex items-center justify-center gap-1.5 shadow-xs transition-all"
                         >
                           <FileEdit className="w-3.5 h-3.5 text-amber-300" />
                           <span>Daftar Kegiatan</span>
+                        </Link>
+                        <Link
+                          href={`/attendance/scan?event_id=${item.id}`}
+                          title="Presensi Hari-H (Scan QR)"
+                          className="py-2.5 px-3.5 rounded-xl bg-blue-900 hover:bg-blue-950 text-white text-xs font-black flex items-center justify-center gap-1.5 shadow-xs transition-all"
+                        >
+                          <Camera className="w-3.5 h-3.5 text-amber-400" />
+                          <span>Presensi</span>
                         </Link>
                         <Link
                           href={`/events/${item.id}`}
