@@ -210,7 +210,7 @@ export default function AdminEventQr({ event, session: initialSession, attendanc
             </select>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={() => handleRefreshQr()}
               disabled={isRefreshing}
@@ -260,9 +260,9 @@ export default function AdminEventQr({ event, session: initialSession, attendanc
 
           {/* CELEBRATORY REAL-TIME CHECK-IN BANNER */}
           {latestCheckIn && (
-            <div className="fixed top-8 left-1/2 -translate-x-1/2 z-50 bg-emerald-500 text-slate-950 px-6 py-3 rounded-full  border-2 border-white flex items-center gap-2.5 font-black text-sm animate-bounce">
-              <CheckCircle2 className="w-5 h-5 text-amber-950" />
-              <span>{latestCheckIn.participant_name} ({latestCheckIn.role_label}) Berhasil Presensi!</span>
+            <div className="fixed top-8 left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-50 bg-emerald-500 text-slate-950 px-4 sm:px-6 py-3 rounded-2xl sm:rounded-full border-2 border-white flex items-center justify-center gap-2.5 font-black text-xs sm:text-sm animate-bounce max-w-full print:hidden">
+              <CheckCircle2 className="w-5 h-5 text-amber-950 shrink-0" />
+              <span className="truncate">{latestCheckIn.participant_name} ({latestCheckIn.role_label}) Berhasil Presensi!</span>
             </div>
           )}
 

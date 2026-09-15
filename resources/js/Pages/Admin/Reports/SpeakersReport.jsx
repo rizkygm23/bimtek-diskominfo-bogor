@@ -140,8 +140,8 @@ export default function SpeakersReport({ events = [], selectedEventId, currentEv
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            
+          <div className="w-full md:w-auto flex flex-wrap items-center gap-2 min-w-0">
+
             {/* PAPER SIZE SELECTOR */}
             <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold">
               <span className="px-2 text-slate-500 text-[11px]">Format:</span>
@@ -168,7 +168,7 @@ export default function SpeakersReport({ events = [], selectedEventId, currentEv
               <select
                 value={selectedEventId}
                 onChange={(e) => handleSelectEvent(e.target.value)}
-                className="px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-blue-950 outline-none"
+                className="max-w-full min-w-0 px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-blue-950 outline-none"
               >
                 {events.map((ev) => (
                   <option key={ev.id} value={ev.id}>{ev.title}</option>
@@ -247,7 +247,7 @@ export default function SpeakersReport({ events = [], selectedEventId, currentEv
             <div className="border-b-[1px] border-black w-full -mt-1 mb-4"></div>
 
             {/* HEADER METADATA (CLEAN UNBORDERED FLEX ALIGNMENT) */}
-            <div className="flex justify-between items-start pt-2 text-[11pt] text-black">
+            <div className="flex flex-wrap justify-between items-start gap-3 pt-2 text-[11pt] text-black">
               <div className="space-y-1">
                 <div className="flex items-start">
                   <span className="w-24 font-bold shrink-0">Nomor</span>
@@ -272,9 +272,9 @@ export default function SpeakersReport({ events = [], selectedEventId, currentEv
               </div>
 
               {/* DATE RIGHT ALIGNED (NO BOX OUTLINE) */}
-              <div 
-                className="text-right font-normal text-[11pt] text-black shrink-0 pl-4"
-                contentEditable={isEditable} 
+              <div
+                className="text-right font-normal text-[11pt] text-black shrink-0 sm:pl-4 w-full sm:w-auto"
+                contentEditable={isEditable}
                 suppressContentEditableWarning
               >
                 Cibinong, {currentEvent?.start_date ? new Date(currentEvent.start_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '15 Agustus 2026'}
@@ -291,7 +291,8 @@ export default function SpeakersReport({ events = [], selectedEventId, currentEv
                 AGENDA & RUNDOWN ACARA BIMTEK DISKOMINFO:
               </h3>
               
-              <table className="w-full text-left text-[10pt] border-collapse border border-black text-black">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[300px] text-left text-[10pt] border-collapse border border-black text-black">
                 <thead className="bg-slate-100 text-black font-extrabold uppercase border-b border-black text-center">
                   <tr>
                     <th className="p-2 border border-black w-10">NO</th>
@@ -313,11 +314,12 @@ export default function SpeakersReport({ events = [], selectedEventId, currentEv
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
 
             {/* OFFICIAL SIGNATURE BLOCK (RIGHT-ALIGNED, NO BLACK BOX OUTLINE) */}
             <div className="flex justify-end pt-8 break-inside-avoid text-[10.5pt] text-black">
-              <div className="text-center space-y-16 min-w-[300px]">
+              <div className="text-center space-y-16 w-full sm:w-auto sm:min-w-[300px] max-w-full">
                 <div className="space-y-0.5">
                   <p 
                     className="font-bold text-black uppercase"

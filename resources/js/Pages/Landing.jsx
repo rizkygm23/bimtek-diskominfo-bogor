@@ -29,7 +29,8 @@ export default function Landing({ events }) {
   const scrollToSection = (id) => {
     const el = document.getElementById(id);
     if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      el.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' });
       setMobileMenuOpen(false);
     }
   };
@@ -45,6 +46,9 @@ export default function Landing({ events }) {
     <div className="min-h-screen bg-white text-slate-900 font-sans antialiased selection:bg-blue-600 selection:text-white">
       <Head title="Platform Pelatihan Digital - Diskominfo Kabupaten Bogor" />
 
+      {/* SKIP LINK untuk pengguna keyboard */}
+      <a href="#katalog" className="skip-link">Lompat ke Konten Utama</a>
+
       {/* ==================== NAVBAR PUBLIC ==================== */}
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-xs py-3.5 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -55,28 +59,28 @@ export default function Landing({ events }) {
           </Link>
 
           {/* CENTER NAVIGATION MENU (DESKTOP & TABLET) */}
-          <nav className="hidden md:flex items-center gap-8 text-xs font-extrabold text-slate-700">
-            <button 
-              onClick={() => scrollToSection('hero')} 
-              className="hover:text-blue-900 transition-colors border-b-2 border-blue-900 pb-0.5 text-blue-900 cursor-pointer"
+          <nav className="hidden md:flex items-center gap-8 text-xs font-extrabold text-slate-700" aria-label="Navigasi utama">
+            <button
+              onClick={() => scrollToSection('hero')}
+              className="hover:text-blue-900 transition-colors border-b-2 border-blue-900 pb-0.5 text-blue-900 cursor-pointer px-1 py-1.5"
             >
               Beranda
             </button>
-            <button 
-              onClick={() => scrollToSection('about')} 
-              className="hover:text-blue-900 transition-colors cursor-pointer"
+            <button
+              onClick={() => scrollToSection('about')}
+              className="hover:text-blue-900 transition-colors cursor-pointer px-1 py-1.5"
             >
               Tentang Kami
             </button>
-            <button 
-              onClick={() => scrollToSection('katalog')} 
-              className="hover:text-blue-900 transition-colors cursor-pointer"
+            <button
+              onClick={() => scrollToSection('katalog')}
+              className="hover:text-blue-900 transition-colors cursor-pointer px-1 py-1.5"
             >
               Katalog
             </button>
-            <button 
-              onClick={() => scrollToSection('fitur')} 
-              className="hover:text-blue-900 transition-colors cursor-pointer"
+            <button
+              onClick={() => scrollToSection('fitur')}
+              className="hover:text-blue-900 transition-colors cursor-pointer px-1 py-1.5"
             >
               Tema Pelatihan
             </button>
@@ -86,7 +90,7 @@ export default function Landing({ events }) {
           <div className="flex items-center gap-3">
             <Link
               href="/login"
-              className="px-5 py-2 rounded-xl bg-[#3b49df] hover:bg-[#2f3ab7] text-white text-xs font-bold shadow-md transition-all active:scale-95 inline-block"
+              className="px-5 py-2.5 rounded-xl bg-blue-900 hover:bg-blue-950 text-white text-xs font-bold shadow-md transition-all active:scale-95 inline-block"
             >
               Masuk
             </Link>
@@ -94,8 +98,9 @@ export default function Landing({ events }) {
             {/* MOBILE HAMBURGER MENU BUTTON */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-xl bg-slate-100 text-slate-800 border border-slate-200"
+              className="md:hidden p-2.5 rounded-xl bg-slate-100 text-slate-800 border border-slate-200"
               aria-label="Buka Menu Navigasi HP"
+              aria-expanded={mobileMenuOpen}
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -108,25 +113,25 @@ export default function Landing({ events }) {
           <div className="md:hidden bg-white border-t border-slate-100 mt-3 pt-3 pb-2 space-y-2 text-xs font-extrabold text-slate-700 animate-in fade-in-50">
             <button 
               onClick={() => scrollToSection('hero')} 
-              className="block w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-blue-900"
+              className="block w-full text-left px-3 py-3 rounded-xl hover:bg-slate-50 text-blue-900"
             >
               Beranda
             </button>
             <button 
               onClick={() => scrollToSection('about')} 
-              className="block w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50"
+              className="block w-full text-left px-3 py-3 rounded-xl hover:bg-slate-50"
             >
               Tentang Kami
             </button>
             <button 
               onClick={() => scrollToSection('katalog')} 
-              className="block w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50"
+              className="block w-full text-left px-3 py-3 rounded-xl hover:bg-slate-50"
             >
               Katalog Modul
             </button>
             <button 
               onClick={() => scrollToSection('fitur')} 
-              className="block w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50"
+              className="block w-full text-left px-3 py-3 rounded-xl hover:bg-slate-50"
             >
               Tema Pelatihan
             </button>
@@ -206,7 +211,7 @@ export default function Landing({ events }) {
               {/* TOP ROYAL BLUE BANNER WITH ICON */}
               <div className="bg-[#1a2e7b] h-44 flex items-center justify-center p-6 relative overflow-hidden group-hover:bg-[#223bb3] transition-colors">
                 <Monitor className="w-12 h-12 text-blue-300 opacity-80 group-hover:scale-110 transition-transform" />
-                <div className="absolute top-3 left-3 px-2.5 py-1 rounded-md text-[10px] font-black uppercase bg-white/90 text-[#1a2e7b] shadow-xs">
+                <div className="absolute top-3 left-3 px-2.5 py-1 rounded-md text-[11px] font-black uppercase bg-white/90 text-[#1a2e7b] shadow-xs">
                   STATUS: OPEN
                 </div>
                 <div className="absolute top-3 right-3 text-[11px] font-extrabold text-white bg-blue-900/80 px-2.5 py-1 rounded-md">
@@ -220,7 +225,7 @@ export default function Landing({ events }) {
                   <h3 className="font-extrabold text-sm text-slate-900 line-clamp-2 leading-snug group-hover:text-blue-900 transition-colors">
                     {ev.title}
                   </h3>
-                  <div className="text-[11px] font-bold text-slate-400">
+                  <div className="text-[11px] font-bold text-slate-600">
                     {ev.start_date} &bull; {ev.location}
                   </div>
                   <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">
@@ -241,7 +246,7 @@ export default function Landing({ events }) {
                   <button
                     type="button"
                     onClick={() => handleCopyLink(ev.id)}
-                    className="w-full py-1.5 text-[10px] font-bold text-slate-500 hover:text-blue-900 flex items-center justify-center gap-1 bg-slate-50 border border-slate-200 rounded-lg transition-colors"
+                    className="w-full py-2.5 text-[11px] font-bold text-slate-600 hover:text-blue-900 flex items-center justify-center gap-1 bg-slate-50 border border-slate-200 rounded-lg transition-colors"
                   >
                     {copiedId === ev.id ? (
                       <>

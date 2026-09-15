@@ -320,7 +320,7 @@ export default function VerificationIndex({ profiles, filters }) {
               </div>
 
               {/* ACTION BUTTONS */}
-              <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
+              <div className="flex flex-wrap items-center justify-end gap-2 pt-4 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => handleStatusUpdate('perlu_perbaikan')}

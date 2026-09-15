@@ -112,7 +112,7 @@ export default function RegisterForm({
             
             {/* SECTION 1: PROFIL & BIODATA NARASUMBER */}
             <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 space-y-5 shadow-xs">
-              <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
+              <div className="border-b border-slate-100 pb-3 flex flex-wrap items-center justify-between gap-2">
                 <h2 className="text-sm font-black text-blue-900 flex items-center gap-2 uppercase tracking-wider">
                   <User className="w-4 h-4 text-amber-500" />
                   <span>1. Profil & Biodata Narasumber</span>

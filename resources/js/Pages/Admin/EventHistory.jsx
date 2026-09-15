@@ -405,7 +405,7 @@ export default function EventHistory({ eventsHistory = [] }) {
                   </div>
 
                   {/* ACTION BUTTONS */}
-                  <div className="pt-3 border-t border-slate-200/80 flex items-center justify-between gap-2">
+                  <div className="pt-3 border-t border-slate-200/80 flex flex-wrap items-center justify-between gap-2">
                     <button
                       onClick={() => setActiveModalEvent(ev)}
                       className="px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white font-extrabold text-xs rounded-xl shadow-xs flex items-center gap-1.5 cursor-pointer transition-transform active:scale-95"

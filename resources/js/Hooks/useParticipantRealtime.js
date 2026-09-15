@@ -4,7 +4,7 @@ import axios from 'axios';
 const BASE_INTERVAL = 5000;   // 5 detik — setengah dari 2.5s semula
 const MAX_INTERVAL  = 30000;  // backoff maks 30 detik saat error network
 
-export function useParticipantRealtime({ bimtekId = null, onParticipantRegistered = null, onAttendanceRecorded = null } = {}) {
+export function useParticipantRealtime({ bimtekId = null, onParticipantRegistered = null, onAttendanceRecorded = null, enabled = true } = {}) {
   const [isConnected, setIsConnected]         = useState(true);
   const [latestNotification, setLatestNotification] = useState(null);
   const [recentEvents, setRecentEvents]       = useState([]);
@@ -15,7 +15,9 @@ export function useParticipantRealtime({ bimtekId = null, onParticipantRegistere
   const retryDelayRef      = useRef(BASE_INTERVAL);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    // Endpoint polling di-gerbang AdminMiddleware — non-admin tidak boleh mem-poll
+    // (redirect middleware menitipkan flash "Akses Ditolak" yang muncul telat di halaman berikutnya).
+    if (!enabled || typeof window === 'undefined') return;
 
     let isSubscribed = true;
 
@@ -82,7 +84,7 @@ export function useParticipantRealtime({ bimtekId = null, onParticipantRegistere
       isSubscribed = false;
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [bimtekId, onParticipantRegistered, onAttendanceRecorded]);
+  }, [bimtekId, onParticipantRegistered, onAttendanceRecorded, enabled]);
 
   return {
     isConnected,

@@ -980,8 +980,8 @@ export default function Scan({ events, myEvents, selectedEventId, recentAttendan
 
       {/* MODAL PESERTA ON-THE-SPOT HARI-H (admin) */}
       {showOnSpotModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs print:hidden">
-          <div className="bg-white rounded-lg max-w-lg w-full p-6 space-y-5 border border-slate-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto print:hidden">
+          <div className="bg-white rounded-lg max-w-lg w-full p-6 space-y-5 border border-slate-200 my-auto">
             <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <div>
                 <h3 className="text-base font-bold text-slate-900">Peserta On-the-Spot (Hari-H)</h3>
@@ -990,7 +990,7 @@ export default function Scan({ events, myEvents, selectedEventId, recentAttendan
                   Akun dibuat otomatis (password = email).
                 </p>
               </div>
-              <button onClick={() => setShowOnSpotModal(false)} className="text-slate-400 hover:text-slate-600 font-bold text-sm">✕</button>
+              <button onClick={() => setShowOnSpotModal(false)} aria-label="Tutup dialog" className="p-2 -m-1 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 font-bold text-base transition-colors">✕</button>
             </div>
 
             {activeEvent && (
@@ -1024,7 +1024,7 @@ export default function Scan({ events, myEvents, selectedEventId, recentAttendan
                 {onSpotForm.errors.name && <p className="text-rose-600 text-[10px] mt-1">{onSpotForm.errors.name}</p>}
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="font-bold text-slate-900 block mb-1">Email:</label>
                   <input
@@ -1049,7 +1049,7 @@ export default function Scan({ events, myEvents, selectedEventId, recentAttendan
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="font-bold text-slate-900 block mb-1">Instansi:</label>
                   <input

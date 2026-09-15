@@ -131,36 +131,26 @@ export default function Sidebar({ open, onClose }) {
       >
         <div className="flex flex-col h-full">
           {/* Header — logo + close button (mobile only) */}
-          <div className="flex items-center justify-between h-16 px-4 border-b border-slate-200 shrink-0">
+          <div className="flex items-center justify-between h-14 px-4 border-b border-slate-200 shrink-0">
             <Link href="/dashboard" className="flex items-center gap-2 shrink-0" onClick={onClose}>
-              <DiskominfoLogo variant="light-bg" className="h-8" />
+              <DiskominfoLogo variant="light-bg" className="h-7" />
             </Link>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors lg:hidden"
+              className="p-2 -m-1 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors lg:hidden"
               aria-label="Tutup sidebar"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          {/* Role Badge */}
-          <div className="px-4 py-3 border-b border-slate-200">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 text-blue-900 border border-blue-100">
-              <RoleIcon className="w-3.5 h-3.5 text-blue-700" />
-              <span className="font-black text-xs uppercase tracking-wider">{roleLabel}</span>
-            </div>
-          </div>
-
-          {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-4" role="navigation" aria-label="Main navigation">
+          {/* Navigation — densitas tinggi agar semua menu muat tanpa scroll (lihat design-system/sim-bimtek/MASTER.md) */}
+          <nav className="flex-1 overflow-y-auto px-2.5 py-2.5 space-y-3" role="navigation" aria-label="Main navigation">
             {groups.map((group, gIdx) => (
-              <div key={gIdx} className="space-y-1">
-                <div className="px-2">
-                  <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">
-                    {group.label}
-                  </p>
-                </div>
+              <div key={gIdx} className="space-y-0.5">
+                <p className="px-2.5 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  {group.label}
+                </p>
                 {group.items.map((item, iIdx) => {
                   const active = isActive(item.href, item.prefix);
                   const Icon = item.icon;
@@ -169,12 +159,13 @@ export default function Sidebar({ open, onClose }) {
                       key={`${gIdx}-${iIdx}`}
                       href={item.href}
                       onClick={onClose}
-                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${active
-                          ? 'bg-slate-100 text-slate-900 font-black border-l-2 border-blue-900'
-                          : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-semibold'
+                      aria-current={active ? 'page' : undefined}
+                      className={`flex items-center gap-2.5 px-2.5 py-2 rounded-lg border-l-2 transition-colors ${active
+                          ? 'bg-slate-100 text-slate-900 font-bold border-blue-900'
+                          : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-semibold border-transparent'
                         }`}
                     >
-                      <Icon className={`w-5 h-5 shrink-0 ${active ? 'text-blue-900' : 'text-slate-400'}`} />
+                      <Icon className={`w-[18px] h-[18px] shrink-0 ${active ? 'text-blue-900' : 'text-slate-400'}`} />
                       <span className="truncate">{item.label}</span>
                     </Link>
                   );
@@ -184,13 +175,13 @@ export default function Sidebar({ open, onClose }) {
           </nav>
 
           {/* Footer: User Card + Logout */}
-          <div className="p-3 border-t border-slate-200 space-y-2">
-            <div className="flex items-center gap-3 p-2 bg-slate-50 rounded-xl border border-slate-100">
-              <div className="w-10 h-10 rounded-xl bg-blue-900 text-white font-bold flex items-center justify-center shrink-0 overflow-hidden">
+          <div className="p-2 border-t border-slate-200 space-y-1.5">
+            <div className="flex items-center gap-2.5 p-1.5 bg-slate-50 rounded-xl border border-slate-100">
+              <div className="w-8 h-8 rounded-lg bg-blue-900 text-white font-bold flex items-center justify-center shrink-0 overflow-hidden">
                 {user?.avatar ? (
                   <img src={user.avatar} alt={user?.name} className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-sm">{user?.name?.charAt(0) || 'U'}</span>
+                  <span className="text-xs">{user?.name?.charAt(0) || 'U'}</span>
                 )}
               </div>
               <div className="flex-1 min-w-0 overflow-hidden">
@@ -203,7 +194,7 @@ export default function Sidebar({ open, onClose }) {
             </div>
             <button
               onClick={() => window.location.href = '/logout'}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-rose-600 bg-rose-50 border border-rose-200 font-bold text-xs hover:bg-rose-100 transition-colors"
+              className="w-full flex items-center gap-2 px-3 py-1.5 rounded-xl text-rose-600 bg-rose-50 border border-rose-200 font-bold text-xs hover:bg-rose-100 transition-colors"
             >
               <LogOut className="w-4 h-4" />
               <span>Keluar</span>

@@ -88,7 +88,7 @@ export default function Speakers({ speakers }) {
             <p className="text-xs text-slate-500 mt-0.5">Database narasumber kedinasan, akademisi, dan berkas administrasi pencairan honor</p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Link
               href="/admin/honorarium"
               className="px-4 py-2.5 rounded-xl bg-emerald-700 text-white text-xs font-extrabold flex items-center gap-1.5 hover:bg-emerald-600 shadow-md"
@@ -196,16 +196,16 @@ export default function Speakers({ speakers }) {
                 
                 <div className="space-y-2 text-xs">
                   {requiredDocuments.map((doc) => (
-                    <div key={doc.id} className="p-3 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between gap-3 hover:bg-blue-50/30 transition-all">
-                      <div className="flex items-center gap-2">
+                    <div key={doc.id} className="p-3 bg-slate-50 border border-slate-200 rounded-2xl flex flex-wrap items-center justify-between gap-3 hover:bg-blue-50/30 transition-all">
+                      <div className="flex items-center gap-2 min-w-0">
                         <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                        <div>
+                        <div className="min-w-0">
                           <strong className="text-slate-900 block font-bold">{doc.title}</strong>
-                          <span className="text-[10px] text-slate-500 font-mono">{doc.filename} &bull; 1.2 MB &bull; <span className="text-emerald-700 font-semibold">Verified</span></span>
+                          <span className="text-[10px] text-slate-500 font-mono break-all">{doc.filename} &bull; 1.2 MB &bull; <span className="text-emerald-700 font-semibold">Verified</span></span>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 shrink-0">
                         <button
                           type="button"
                           onClick={() => setPreviewDoc({ doc, speaker: selectedSpeakerForDocs })}
@@ -304,25 +304,25 @@ export default function Speakers({ speakers }) {
                     </div>
 
                     <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2 text-slate-800">
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                         <span className="font-bold text-slate-600">Nama Lengkap:</span>
-                        <strong className="col-span-2 text-slate-900">{previewDoc.speaker?.name}</strong>
+                        <strong className="sm:col-span-2 text-slate-900">{previewDoc.speaker?.name}</strong>
                       </div>
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                         <span className="font-bold text-slate-600">NIP / NIK:</span>
-                        <span className="col-span-2 font-mono text-slate-900 font-bold">{previewDoc.speaker?.nip_nik || '19750412 199903 1 002'}</span>
+                        <span className="sm:col-span-2 font-mono text-slate-900 font-bold break-all">{previewDoc.speaker?.nip_nik || '19750412 199903 1 002'}</span>
                       </div>
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                         <span className="font-bold text-slate-600">Instansi:</span>
-                        <span className="col-span-2 text-slate-900 font-semibold">{previewDoc.speaker?.instansi}</span>
+                        <span className="sm:col-span-2 text-slate-900 font-semibold">{previewDoc.speaker?.instansi}</span>
                       </div>
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                         <span className="font-bold text-slate-600">Nama File:</span>
-                        <span className="col-span-2 font-mono text-blue-900 font-bold">{previewDoc.doc.filename}</span>
+                        <span className="sm:col-span-2 font-mono text-blue-900 font-bold">{previewDoc.doc.filename}</span>
                       </div>
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                         <span className="font-bold text-slate-600">Ukuran File:</span>
-                        <span className="col-span-2 font-mono text-slate-700">1.2 MB (Format Asli PDF/PPTX)</span>
+                        <span className="sm:col-span-2 font-mono text-slate-700">1.2 MB (Format Asli PDF/PPTX)</span>
                       </div>
                     </div>
 
@@ -355,7 +355,7 @@ export default function Speakers({ speakers }) {
               </div>
 
               {/* ACTION BUTTONS */}
-              <div className="flex items-center justify-between pt-2">
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setPreviewDoc(null)}
@@ -367,10 +367,10 @@ export default function Speakers({ speakers }) {
                 <button
                   type="button"
                   onClick={() => handleDownloadDoc(previewDoc.doc, previewDoc.speaker)}
-                  className="px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-black flex items-center gap-2 shadow-md cursor-pointer transition-transform active:scale-95"
+                  className="px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-black flex items-center gap-2 shadow-md cursor-pointer transition-transform active:scale-95 max-w-full"
                 >
-                  <Download className="w-4 h-4 text-amber-300" />
-                  <span>Unduh Dokumen Ini ({previewDoc.doc.filename})</span>
+                  <Download className="w-4 h-4 text-amber-300 shrink-0" />
+                  <span className="truncate">Unduh Dokumen Ini ({previewDoc.doc.filename})</span>
                 </button>
               </div>
 
@@ -396,7 +396,7 @@ export default function Speakers({ speakers }) {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block font-bold text-slate-700 mb-1">NIP / NIK</label>
                     <input
@@ -420,7 +420,7 @@ export default function Speakers({ speakers }) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block font-bold text-slate-700 mb-1">Instansi asal</label>
                     <input
@@ -443,7 +443,7 @@ export default function Speakers({ speakers }) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block font-bold text-slate-700 mb-1">Nama Bank</label>
                     <SearchableBankSelect

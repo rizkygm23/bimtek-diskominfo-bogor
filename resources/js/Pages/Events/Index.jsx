@@ -198,6 +198,7 @@ export default function Index({ events, registeredEventIds = [] }) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Cari tema atau lokasi BIMTEK..."
+            aria-label="Cari tema atau lokasi BIMTEK"
             className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-xs font-medium text-slate-900 focus:ring-2 focus:ring-blue-900 focus:border-blue-900 shadow-xs outline-none transition-all"
           />
         </div>
@@ -209,7 +210,7 @@ export default function Index({ events, registeredEventIds = [] }) {
               <div>
                 {/* CARD HEADER */}
                 <div className="flex items-center justify-between gap-2 mb-3">
-                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wide border ${
+                  <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wide border ${
                     (item.computed_status || item.status) === 'open'
                       ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
                       : (item.computed_status || item.status) === 'ongoing'
@@ -221,24 +222,24 @@ export default function Index({ events, registeredEventIds = [] }) {
 
                   {/* ADMIN EDIT / DELETE */}
                   {isAdmin && (
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-2">
                       <button
                         type="button"
                         onClick={() => handleOpenEditModal(item)}
-                        className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold flex items-center gap-1 transition-colors"
+                        className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold flex items-center gap-1 transition-colors"
                         title="Edit Kegiatan"
                       >
-                        <Edit className="w-3 h-3 text-blue-900" />
+                        <Edit className="w-3.5 h-3.5 text-blue-900" />
                         <span>Edit</span>
                       </button>
 
                       <button
                         type="button"
                         onClick={() => handleDeleteEvent(item.id, item.title)}
-                        className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-bold flex items-center gap-1 transition-colors"
+                        className="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-[11px] font-bold flex items-center gap-1 transition-colors"
                         title="Hapus Kegiatan"
                       >
-                        <Trash2 className="w-3 h-3 text-rose-600" />
+                        <Trash2 className="w-3.5 h-3.5 text-rose-600" />
                         <span>Hapus</span>
                       </button>
                     </div>
@@ -408,13 +409,13 @@ export default function Index({ events, registeredEventIds = [] }) {
 
         {/* MODAL CREATE / EDIT EVENT */}
         {showModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-            <div className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl border border-slate-200">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
+            <div className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl border border-slate-200 my-auto">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <h3 className="text-base font-extrabold text-slate-900">
                   {editingEvent ? 'Edit Kegiatan BIMTEK' : 'Buat Kegiatan BIMTEK Baru'}
                 </h3>
-                <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600 font-bold text-sm">✕</button>
+                <button onClick={() => setShowModal(false)} aria-label="Tutup dialog" className="p-2 -m-1 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 font-bold text-base transition-colors">✕</button>
               </div>
 
               <form onSubmit={handleSubmitEvent} className="space-y-4 text-xs">
@@ -441,7 +442,7 @@ export default function Index({ events, registeredEventIds = [] }) {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="font-bold text-slate-900 block mb-1">Tanggal Mulai:</label>
                     <input
@@ -464,7 +465,7 @@ export default function Index({ events, registeredEventIds = [] }) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="font-bold text-slate-900 block mb-1">Lokasi Kegiatan:</label>
                     <input
@@ -511,14 +512,14 @@ export default function Index({ events, registeredEventIds = [] }) {
 
         {/* MODAL ADMIN DIRECT ENTRY */}
         {showAdminEntryModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-            <div className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl border border-slate-200">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
+            <div className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl border border-slate-200 my-auto">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div>
                   <h3 className="text-base font-extrabold text-slate-900">Direct Entry Data {entryRole === 'pembicara' ? 'Narasumber' : 'Peserta'}</h3>
                   <p className="text-[11px] text-slate-500">Pendaftaran manual oleh Administrator Diskominfo</p>
                 </div>
-                <button onClick={() => setShowAdminEntryModal(false)} className="text-slate-400 hover:text-slate-600 font-bold text-sm">✕</button>
+                <button onClick={() => setShowAdminEntryModal(false)} aria-label="Tutup dialog" className="p-2 -m-1 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 font-bold text-base transition-colors">✕</button>
               </div>
 
               <form onSubmit={handleAdminDirectEntrySubmit} className="space-y-3.5 text-xs">
@@ -534,7 +535,7 @@ export default function Index({ events, registeredEventIds = [] }) {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="font-bold text-slate-900 block mb-1">Email:</label>
                     <input
@@ -556,7 +557,7 @@ export default function Index({ events, registeredEventIds = [] }) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="font-bold text-slate-900 block mb-1">Instansi:</label>
                     <input

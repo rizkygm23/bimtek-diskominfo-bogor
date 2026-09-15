@@ -112,7 +112,8 @@ class PaymentController extends Controller
             'account_name' => $accountName,
             'payment_status' => 'verified',
             'payment_date' => now(),
-            'notes' => $validated['notes'],
+            // notes bersifat nullable — key bisa absen dari validated() bila tak dikirim
+            'notes' => $validated['notes'] ?? null,
         ]);
 
         ActivityLog::create([

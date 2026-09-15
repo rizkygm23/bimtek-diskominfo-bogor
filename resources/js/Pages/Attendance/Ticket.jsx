@@ -51,18 +51,18 @@ export default function Ticket({ registration }) {
         {/* TIKET DIGITAL DISKOMINFO CARD */}
         <div className="bg-white border-2 border-slate-200 rounded-3xl p-6 md:p-8 shadow-xl space-y-6 relative overflow-hidden print:bg-white print:text-black print:border-black">
           
-          {/* HEADER BRANDING */}
-          <div className="flex items-center justify-between border-b border-slate-100 pb-4 print:border-gray-300">
-            <div className="flex items-center gap-3">
-              <img src="/images/logo_diskominfo_bogorkab.png" alt="Diskominfo" className="h-10 object-contain" />
-              <div>
+          {/* HEADER BRANDING — stack di layar kecil agar teks tidak saling menimpa */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-100 pb-4 print:border-gray-300">
+            <div className="flex items-center gap-3 min-w-0">
+              <img src="/images/logo_diskominfo_bogorkab.png" alt="Diskominfo" className="h-10 object-contain shrink-0" />
+              <div className="min-w-0">
                 <h1 className="font-black text-sm text-slate-900">TIKET PRESENSI DIGITAL</h1>
                 <p className="text-[10px] text-blue-900 font-extrabold tracking-widest uppercase">DISKOMINFO KABUPATEN BOGOR</p>
               </div>
             </div>
 
-            <div className="text-right">
-              <span className="font-mono font-extrabold text-blue-900 text-sm print:text-black">
+            <div className="sm:text-right shrink-0">
+              <span className="font-mono font-extrabold text-blue-900 text-sm print:text-black block">
                 {registration.registration_code}
               </span>
               <div className={`text-[10px] font-extrabold uppercase block ${isPresentHariH ? 'text-emerald-600' : 'text-amber-600'}`}>

@@ -32,7 +32,10 @@ export default function MobileBottomNav() {
     prefix ? current.startsWith(href) : current === href;
 
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-slate-200 px-3 py-1.5 flex items-center justify-around font-sans pb-safe print:hidden">
+    <div
+      className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-slate-200 px-3 pt-1.5 flex items-center justify-around font-sans print:hidden"
+      style={{ paddingBottom: 'max(0.375rem, env(safe-area-inset-bottom))' }}
+    >
 
       {/* BERANDA */}
       <Link

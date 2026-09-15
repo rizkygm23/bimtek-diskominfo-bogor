@@ -108,6 +108,7 @@ export default function Dashboard({ stats, myRegistrations = [], myTeachingSched
   const { isConnected, latestNotification, clearNotification } = useParticipantRealtime({
     onParticipantRegistered: handleNewParticipant,
     onAttendanceRecorded: handleAttendance,
+    enabled: isAdmin,
   });
 
   const socialLinks = [
@@ -449,7 +450,7 @@ export default function Dashboard({ stats, myRegistrations = [], myTeachingSched
             
             {/* SPEAKER PENUGASAN CARD */}
             <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
                 <div className="flex items-center gap-2">
                   <Mic className="w-5 h-5 text-purple-700" />
                   <h2 className="text-sm font-black text-slate-900 uppercase tracking-wider">
@@ -593,7 +594,7 @@ export default function Dashboard({ stats, myRegistrations = [], myTeachingSched
 
             {/* MY REGISTRATIONS TABLE */}
             <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
                 <h2 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-blue-900" />
                   <span>Kegiatan BIMTEK yang Anda Ikuti</span>

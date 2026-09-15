@@ -116,7 +116,7 @@ export default function PaymentIndex({ payments, events, recipients, taxParamete
         <div className="bg-white p-4 md:p-6 rounded-lg border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
 
           {/* RECIPIENT TYPE TABS */}
-          <div className="flex items-center gap-2 p-1 bg-slate-100 rounded-lg">
+          <div className="flex flex-wrap items-center gap-2 p-1 bg-slate-100 rounded-lg">
             <button
               onClick={() => handleFilter('pembicara', eventId)}
               className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
@@ -143,11 +143,11 @@ export default function PaymentIndex({ payments, events, recipients, taxParamete
           </div>
 
           {/* EVENT FILTER & ADD BUTTON */}
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3 min-w-0">
             <select
               value={eventId}
               onChange={(e) => handleFilter(type, e.target.value)}
-              className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-medium text-slate-900 outline-none focus:border-blue-900"
+              className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-medium text-slate-900 outline-none focus:border-blue-900 max-w-full min-w-0"
             >
               <option value="">Semua Kegiatan BIMTEK</option>
               {events.map((ev) => (
@@ -264,15 +264,15 @@ export default function PaymentIndex({ payments, events, recipients, taxParamete
 
         {/* MODAL INPUT RINCIAN PEMBAYARAN */}
         {modalOpen && (
-          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl max-w-xl w-full p-6 space-y-6 shadow-2xl border border-slate-200">
+          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+            <div className="bg-white rounded-3xl max-w-xl w-full p-6 space-y-6 shadow-2xl border border-slate-200 my-auto">
               
               <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                 <div>
                   <h3 className="text-lg font-extrabold text-slate-900">Input Rincian Pembayaran Baru</h3>
                   <p className="text-xs text-slate-500">Kategori: {type.toUpperCase()}</p>
                 </div>
-                <button onClick={() => setModalOpen(false)} className="text-slate-400 hover:text-slate-600 font-bold text-sm">✕</button>
+                <button onClick={() => setModalOpen(false)} aria-label="Tutup dialog" className="p-2 -m-1 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 font-bold text-base transition-colors">✕</button>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4 text-xs">
@@ -309,7 +309,7 @@ export default function PaymentIndex({ payments, events, recipients, taxParamete
                 </div>
 
                 {/* COMPONENT TYPE & VOLUME */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="font-bold text-slate-900 block mb-1">Jenis Komponen:</label>
                     <select
@@ -325,13 +325,13 @@ export default function PaymentIndex({ payments, events, recipients, taxParamete
 
                   <div>
                     <label className="font-bold text-slate-900 block mb-1">Volume & Satuan:</label>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 min-w-0">
                       <input
                         type="number"
                         step="0.5"
                         value={data.volume}
                         onChange={(e) => setData('volume', e.target.value)}
-                        className="w-20 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-blue-900"
+                        className="w-20 shrink-0 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-blue-900"
                         required
                       />
                       <input
@@ -339,7 +339,7 @@ export default function PaymentIndex({ payments, events, recipients, taxParamete
                         value={data.unit}
                         onChange={(e) => setData('unit', e.target.value)}
                         placeholder="Jam / Sesi / Hari"
-                        className="flex-1 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-blue-900"
+                        className="flex-1 min-w-0 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-blue-900"
                         required
                       />
                     </div>
@@ -347,7 +347,7 @@ export default function PaymentIndex({ payments, events, recipients, taxParamete
                 </div>
 
                 {/* UNIT PRICE & TAX RATE */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="font-bold text-slate-900 block mb-1">Harga Satuan (Rp):</label>
                     <input

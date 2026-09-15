@@ -115,9 +115,9 @@ export default function Edit({ user, participantProfile, speakerProfileDetail, s
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploading}
-                className="absolute inset-0 bg-slate-950/60 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1 text-amber-400 font-extrabold text-xs cursor-pointer shadow-lg"
+                className="absolute inset-x-2 bottom-2 bg-slate-950/70 rounded-xl py-1.5 flex flex-col items-center justify-center gap-0.5 text-amber-400 font-extrabold text-[10px] cursor-pointer shadow-lg opacity-100 md:opacity-0 md:inset-0 md:rounded-3xl md:py-0 md:text-xs md:bg-slate-950/60 md:flex-col md:group-hover:opacity-100 transition-opacity"
               >
-                <Camera className="w-6 h-6 animate-bounce" />
+                <Camera className="w-5 h-5 md:w-6 md:h-6 md:animate-bounce" />
                 <span>{isUploading ? 'Mengunggah...' : 'Ubah Foto'}</span>
               </button>
 
@@ -157,7 +157,7 @@ export default function Edit({ user, participantProfile, speakerProfileDetail, s
         {/* PROFILE FORM CARD */}
         <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm space-y-6">
           
-          <div className="border-b border-slate-100 pb-4 flex items-center justify-between">
+          <div className="border-b border-slate-100 pb-4 flex flex-wrap items-center justify-between gap-2">
             <div>
               <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
                 <User className="w-5 h-5 text-blue-900" />

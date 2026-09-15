@@ -243,7 +243,7 @@ export default function ReportCenter({
           {/* TOP BAR: APP INFO & MAIN EXPORTS */}
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 border-b border-slate-100 pb-4">
             <div>
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex flex-wrap items-center gap-2 mb-1">
                 <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-blue-900 text-white text-[11px] font-black uppercase tracking-wider">
                   <FileText className="w-3.5 h-3.5 text-amber-400" />
                   <span>Microsoft Word & Docs Live Editor</span>
@@ -366,7 +366,7 @@ export default function ReportCenter({
           {/* WORD FORMATTING TOOLBAR (RIBBON STYLE) */}
           <div className="bg-slate-100/90 border border-slate-300/80 p-2 rounded-2xl flex flex-wrap items-center justify-between gap-2 text-xs">
             {/* FONT & TEXT CONTROLS */}
-            <div className="flex items-center gap-1">
+            <div className="flex flex-wrap items-center gap-1">
               <select
                 value={fontFamily}
                 onChange={(e) => setFontFamily(e.target.value)}
@@ -511,9 +511,9 @@ export default function ReportCenter({
               <strong>Petunjuk Microsoft Word Mode:</strong> Anda dapat mengklik dan mengedit teks langsung di lembar kerja A4 di bawah (termasuk judul, nomor surat, nama peserta, instansi, hingga pejabat penandatangan).
             </span>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <Link 
-              href="/admin/reports/participants" 
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href="/admin/reports/participants"
               className="text-blue-900 hover:underline font-bold text-[11px] flex items-center gap-1"
             >
               <span>Format 2-Kolom TTD Zig-zag</span>
@@ -539,11 +539,11 @@ export default function ReportCenter({
           <div 
             id="word-document-sheet"
             className={`bg-white text-black transition-all mx-auto print:m-0 print:p-0 print:border-none print:shadow-none ${
-              paperSize === 'A4_LANDSCAPE' 
-                ? 'w-full max-w-5xl min-h-[210mm] p-8 sm:p-12 md:p-14' 
+              paperSize === 'A4_LANDSCAPE'
+                ? 'w-full max-w-5xl min-h-[210mm] p-4 sm:p-12 md:p-14'
                 : paperSize === 'F4'
-                ? 'w-full max-w-3xl min-h-[330mm] p-8 sm:p-12 md:p-16'
-                : 'w-full max-w-3xl min-h-[297mm] p-8 sm:p-12 md:p-14'
+                ? 'w-full max-w-3xl min-h-[330mm] p-4 sm:p-12 md:p-16'
+                : 'w-full max-w-3xl min-h-[297mm] p-4 sm:p-12 md:p-14'
             } shadow-[0_8px_30px_rgb(0,0,0,0.15)] border border-slate-300`}
             style={{ fontFamily: '"Times New Roman", Times, serif', fontSize: fontSize }}
           >

@@ -81,7 +81,7 @@ export default function AppLayout({ children, title }) {
   // Repositioned to content column top-4 right-4 (not viewport top-20).
   // ───────────────────────────────────────────────────────────
   const flashNode = showFlash && (flash?.success || flash?.error) ? (
-    <div className="fixed top-4 right-4 z-50 max-w-md print:hidden">
+    <div className="fixed top-4 left-4 right-4 sm:left-auto z-50 max-w-md print:hidden">
       {flash?.success && (
         <div className="bg-emerald-800 text-white text-xs px-4 py-3 rounded-lg shadow-sm border border-emerald-600 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
@@ -116,10 +116,10 @@ export default function AppLayout({ children, title }) {
       <div className="min-h-[100dvh] flex bg-slate-50 text-slate-900 antialiased overflow-x-hidden w-full max-w-full">
         <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-        <div className="flex-1 lg:ml-64 flex flex-col min-h-[100dvh] pb-[4rem] lg:pb-0">
+        <div className="flex-1 lg:ml-64 min-w-0 flex flex-col min-h-[100dvh] pb-[4rem] lg:pb-0">
           <MobileTopBar onMenuClick={() => setSidebarOpen(true)} />
 
-          <main className="flex-1 max-w-6xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6 print:p-0 print:m-0 print:w-full print:max-w-none print:space-y-0">
+          <main className="flex-1 max-w-6xl w-full min-w-0 mx-auto p-4 sm:p-6 lg:p-8 space-y-6 print:p-0 print:m-0 print:w-full print:max-w-none print:space-y-0">
             {children}
           </main>
         </div>
@@ -144,8 +144,8 @@ export default function AppLayout({ children, title }) {
       }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between text-[11px] font-medium">
 
-          {/* KONTAK DETAIL */}
-          <div className="flex items-center gap-3.5 text-slate-400 whitespace-nowrap">
+          {/* KONTAK DETAIL — disembunyikan di layar sangat kecil agar bar tidak overflow */}
+          <div className="hidden sm:flex items-center gap-3.5 text-slate-400 whitespace-nowrap">
             <span className="flex items-center gap-1.5 hover:text-white transition-colors">
               <Phone className="w-3 h-3 text-amber-400 shrink-0" />
               <span>(021) 8758605</span>

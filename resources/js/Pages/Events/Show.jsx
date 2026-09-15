@@ -118,6 +118,7 @@ export default function Show({ event, userRegistration, userSpeakerAssignment })
   const { isConnected, latestNotification, clearNotification } = useParticipantRealtime({
     bimtekId: event.id,
     onParticipantRegistered: handleNewParticipant,
+    enabled: user?.role === 'admin',
   });
 
   const isFull = registrations.length >= event.quota;
@@ -209,11 +210,11 @@ export default function Show({ event, userRegistration, userSpeakerAssignment })
 
       {/* INSTANT FLOATING UPLOAD PROGRESS BADGE (ZERO LAG FEEDBACK) */}
       {isUploading && (
-        <div className="fixed bottom-6 right-6 z-50 bg-blue-950 text-white px-5 py-4 rounded-2xl shadow-2xl border border-blue-700/80 flex items-center gap-4">
+        <div className="fixed bottom-20 lg:bottom-6 left-4 right-4 sm:left-auto sm:right-6 sm:w-auto z-50 bg-blue-950 text-white px-5 py-4 rounded-2xl shadow-2xl border border-blue-700/80 flex items-center gap-4 print:hidden">
           <RefreshCw className="w-5 h-5 text-amber-400 animate-spin shrink-0" />
-          <div className="space-y-1">
+          <div className="space-y-1 min-w-0 flex-1 sm:flex-none">
             <p className="text-xs font-black text-white">Mengunggah Berkas Presentasi...</p>
-            <div className="w-48 bg-blue-900 rounded-full h-2 overflow-hidden border border-blue-800">
+            <div className="w-full sm:w-48 bg-blue-900 rounded-full h-2 overflow-hidden border border-blue-800">
               {/* TODO: flatten hero — see PageHeader.jsx (progress bar) */}
               <div
                 className="bg-gradient-to-r from-amber-400 to-orange-500 h-full transition-all duration-150 rounded-full"
@@ -363,11 +364,11 @@ export default function Show({ event, userRegistration, userSpeakerAssignment })
           </div>
         </div>
 
-        {/* TABS NAVIGATION */}
-        <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+        {/* TABS NAVIGATION — scroll horizontal di layar kecil agar label tidak patah */}
+        <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto" role="tablist">
           <button
             onClick={() => setActiveTab('detail')}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
               activeTab === 'detail'
                 ? 'bg-blue-900 text-white shadow-xs'
                 : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800'
@@ -377,7 +378,7 @@ export default function Show({ event, userRegistration, userSpeakerAssignment })
           </button>
           <button
             onClick={() => setActiveTab('materials')}
-            className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+            className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
               activeTab === 'materials'
                 ? 'bg-orange-600 text-white shadow-xs'
                 : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800'
@@ -388,7 +389,7 @@ export default function Show({ event, userRegistration, userSpeakerAssignment })
           </button>
           <button
             onClick={() => setActiveTab('participants')}
-            className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+            className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
               activeTab === 'participants'
                 ? 'bg-blue-900 text-white shadow-xs'
                 : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800'
@@ -564,7 +565,7 @@ export default function Show({ event, userRegistration, userSpeakerAssignment })
                       </div>
 
                       {/* Material File or Upload */}
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center gap-2 flex-wrap min-w-0">
                         {es.material_path ? (
                           <>
                             {/* File Badge */}
@@ -574,7 +575,7 @@ export default function Show({ event, userRegistration, userSpeakerAssignment })
                             </div>
 
                             {/* File Name */}
-                            <span className="text-xs font-bold text-slate-700 dark:text-slate-300 max-w-[160px] truncate hidden md:block" title={fileName}>
+                            <span className="text-xs font-bold text-slate-700 dark:text-slate-300 max-w-[160px] truncate" title={fileName}>
                               {fileName}
                             </span>
 

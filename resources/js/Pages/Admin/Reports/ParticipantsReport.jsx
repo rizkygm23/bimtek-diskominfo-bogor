@@ -325,7 +325,7 @@ export default function ParticipantsReport({ events = [], selectedEventId, curre
           {/* TOP BAR */}
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 border-b border-slate-100 pb-4">
             <div>
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex flex-wrap items-center gap-2 mb-1">
                 <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-blue-900 text-white text-[11px] font-bold uppercase tracking-wider">
                   <FileText className="w-3.5 h-3.5 text-amber-400" />
                   <span>Format Laporan Resmi (Times New Roman)</span>
@@ -464,7 +464,7 @@ export default function ParticipantsReport({ events = [], selectedEventId, curre
 
           {/* WORD FORMATTING RIBBON */}
           <div className="bg-slate-100/90 border border-slate-300/80 p-2 rounded-xl flex flex-wrap items-center justify-between gap-2 text-xs">
-            <div className="flex items-center gap-1">
+            <div className="flex flex-wrap items-center gap-1">
               <span className="px-2.5 py-1 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-800">
                 Times New Roman (Standar Resmi)
               </span>
@@ -782,7 +782,7 @@ export default function ParticipantsReport({ events = [], selectedEventId, curre
 
             {/* 4. OFFICIAL PPTK SIGNATURE (RIGHT-ALIGNED, NATURAL FLOW WITH ZERO OVERLAP) */}
             <div className="flex justify-end pt-8 pb-4 break-inside-avoid text-[10.5pt] text-black">
-              <div className="text-center min-w-[320px] max-w-[400px]">
+              <div className="text-center w-full sm:w-auto sm:min-w-[320px] max-w-full sm:max-w-[400px]">
                 <div className="space-y-0.5 mb-20">
                   <p 
                     className="font-bold text-black uppercase"
