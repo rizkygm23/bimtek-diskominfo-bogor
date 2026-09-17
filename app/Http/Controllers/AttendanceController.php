@@ -235,7 +235,7 @@ class AttendanceController extends Controller
                 'interval_minutes' => $session->interval_minutes,
                 'valid_from' => $session->valid_from->toIso8601String(),
                 'valid_until' => $session->valid_until->toIso8601String(),
-                'remaining_seconds' => max(1, $now->diffInSeconds($session->valid_until, false)),
+                'remaining_seconds' => (int) max(1, $now->diffInSeconds($session->valid_until, false)),
             ],
             'attendancesCount' => $attendancesCount,
         ]);
@@ -273,7 +273,7 @@ class AttendanceController extends Controller
                 'interval_minutes' => $session->interval_minutes,
                 'valid_from' => $session->valid_from->toIso8601String(),
                 'valid_until' => $session->valid_until->toIso8601String(),
-                'remaining_seconds' => max(0, $now->diffInSeconds($session->valid_until, false)),
+                'remaining_seconds' => (int) max(0, $now->diffInSeconds($session->valid_until, false)),
             ],
         ]);
     }

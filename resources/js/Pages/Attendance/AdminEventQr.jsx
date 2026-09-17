@@ -25,7 +25,9 @@ import LiveConnectionBadge from '@/Components/LiveConnectionBadge';
 export default function AdminEventQr({ event, session: initialSession, attendancesCount: initialAttendancesCount }) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [session, setSession] = useState(initialSession);
-  const [countdown, setCountdown] = useState(initialSession?.remaining_seconds > 0 ? initialSession.remaining_seconds : 600);
+  const [countdown, setCountdown] = useState(
+    Math.max(1, Math.floor(Number(initialSession?.remaining_seconds) || 600))
+  );
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [attendancesCount, setAttendancesCount] = useState(initialAttendancesCount || 0);
   const [intervalMinutes, setIntervalMinutes] = useState(initialSession?.interval_minutes || 10);
@@ -54,7 +56,7 @@ export default function AdminEventQr({ event, session: initialSession, attendanc
 
       if (response.data?.success && response.data?.session) {
         setSession(response.data.session);
-        setCountdown(response.data.session.remaining_seconds || (intervalMinutes * 60));
+        setCountdown(Math.max(1, Math.floor(Number(response.data.session.remaining_seconds) || (intervalMinutes * 60))));
       }
     } catch (err) {
       console.error('Error refreshing QR session:', err);
@@ -72,10 +74,7 @@ export default function AdminEventQr({ event, session: initialSession, attendanc
         if (prev <= 3 && !isRefreshingRef.current) {
           handleRefreshQr();
         }
-        if (prev <= 1) {
-          return 1; // Hold on active token until new one replaces it
-        }
-        return prev - 1;
+        return prev <= 1 ? 1 : Math.floor(prev) - 1;
       });
     }, 1000);
 
@@ -144,8 +143,9 @@ export default function AdminEventQr({ event, session: initialSession, attendanc
   }, [event.id]);
 
   const formatTime = (secs) => {
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
+    const total = Math.max(0, Math.floor(Number(secs) || 0));
+    const m = Math.floor(total / 60);
+    const s = total % 60;
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
