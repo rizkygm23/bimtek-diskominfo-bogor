@@ -55,8 +55,8 @@ export default function TaxParameters({ taxParameters }) {
               <span>Pengaturan Fleksibilitas Pajak Kedinasan</span>
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">Konfigurasi Parameter Tarif PPh 21</h1>
-            <p className="text-blue-100 text-xs md:text-sm max-w-3xl">
-              Atur persentase pemotongan PPh 21 secara fleksibel tanpa hardcode. Sesuaikan tarif berdasarkan status kepemilikan NPWP, Golongan ASN, atau regulasi perundang-undangan terbaru.
+            <p className="text-blue-100 text-xs max-w-xl leading-snug line-clamp-2">
+              Atur tarif PPh 21 per golongan / status NPWP.
             </p>
           </div>
         </div>

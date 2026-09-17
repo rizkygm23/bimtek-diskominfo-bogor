@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { usePage, useForm, router, Link } from '@inertiajs/react';
+import { useForm, router } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import SearchableBankSelect from '../../Components/SearchableBankSelect';
 import { 
@@ -22,29 +22,24 @@ function VerificationBanner({ status, notes, role }) {
 
   if (status === 'perlu_perbaikan') {
     return (
-      <div className="p-4 sm:p-5 bg-amber-50 border-2 border-amber-300 rounded-2xl space-y-2">
+      <div className="p-3.5 sm:p-4 bg-amber-50 border border-amber-300 rounded-2xl">
         <div className="flex items-start gap-2.5">
-          <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
           <div className="min-w-0 space-y-1.5">
             <h3 className="text-sm font-extrabold text-amber-950">
-              Data administrasi perlu diperbaiki
+              Perlu perbaikan data
             </h3>
-            <p className="text-xs text-amber-900/90 leading-relaxed">
-              Admin Diskominfo meminta Anda memperbaiki berkas / data di bawah ini.
-              Setelah disimpan, status akan kembali ke antrian verifikasi.
+            <p className="text-xs text-amber-900/90 leading-snug line-clamp-2">
+              Perbaiki berkas di bawah, lalu simpan untuk diajukan ulang.
             </p>
             {notes ? (
-              <div className="mt-2 p-3 bg-white/80 border border-amber-200 rounded-xl">
-                <span className="block text-[10px] font-bold uppercase tracking-wider text-amber-700 mb-1">
-                  Catatan dari Admin
+              <div className="p-2.5 bg-white/90 border border-amber-200 rounded-xl">
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-amber-700 mb-0.5">
+                  Catatan admin
                 </span>
-                <p className="text-xs font-semibold text-slate-800 whitespace-pre-wrap">{notes}</p>
+                <p className="text-xs font-semibold text-slate-800 whitespace-pre-wrap line-clamp-3">{notes}</p>
               </div>
-            ) : (
-              <p className="text-xs text-amber-800 italic">
-                Admin belum menulis detail catatan — periksa ulang foto KTP, NPWP, dan data rekening Anda.
-              </p>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
@@ -53,15 +48,12 @@ function VerificationBanner({ status, notes, role }) {
 
   if (status === 'belum_diverifikasi') {
     return (
-      <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex items-start gap-2.5">
-        <XCircle className="w-5 h-5 text-slate-400 shrink-0 mt-0.5" />
-        <div>
-          <h3 className="text-sm font-extrabold text-slate-800">Menunggu verifikasi admin</h3>
-          <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
-            Data {role === 'pembicara' ? 'narasumber' : 'peserta'} Anda sedang dalam antrean pemeriksaan.
-            {notes ? (
-              <span className="block mt-1.5 text-slate-700 font-medium">{notes}</span>
-            ) : null}
+      <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl flex items-start gap-2.5">
+        <XCircle className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+        <div className="min-w-0">
+          <h3 className="text-sm font-extrabold text-slate-800">Menunggu verifikasi</h3>
+          <p className="text-xs text-slate-600 mt-0.5 leading-snug line-clamp-2">
+            Data {role === 'pembicara' ? 'narasumber' : 'peserta'} Anda sedang diperiksa admin.
           </p>
         </div>
       </div>
@@ -70,13 +62,12 @@ function VerificationBanner({ status, notes, role }) {
 
   if (status === 'terverifikasi') {
     return (
-      <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-start gap-2.5">
-        <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-        <div>
+      <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-start gap-2.5">
+        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+        <div className="min-w-0">
           <h3 className="text-sm font-extrabold text-emerald-900">Data terverifikasi</h3>
-          <p className="text-xs text-emerald-800/90 mt-0.5">
-            Identitas dan rekening Anda sudah disetujui admin. Ubah data hanya bila benar-benar perlu
-            (perubahan berkas akan memicu review ulang).
+          <p className="text-xs text-emerald-800/90 mt-0.5 leading-snug line-clamp-2">
+            Identitas & rekening sudah disetujui. Ubah berkas akan memicu review ulang.
           </p>
         </div>
       </div>
@@ -265,8 +256,8 @@ export default function Edit({ user, participantProfile, speakerProfileDetail })
                 <User className="w-5 h-5 text-blue-900" />
                 <span>Profil & Data Administrasi Kedinasan</span>
               </h2>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Kelola data NIK, NPWP, dan rekening bank untuk pencairan honorarium & uang jalan.
+              <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">
+                Update NIK, NPWP, rekening, dan dokumen identitas.
               </p>
             </div>
             {statusBadge()}
@@ -341,10 +332,8 @@ export default function Edit({ user, participantProfile, speakerProfileDetail })
                   </div>
 
                   {isPeserta && (
-                    <p className="text-xs text-slate-500 leading-relaxed">
-                      Data ini dipakai untuk verifikasi identitas dan pencairan uang jalan.
-                      Anda juga bisa melengkapi saat daftar di{' '}
-                      <Link href="/events" className="text-blue-900 font-bold underline">Katalog BIMTEK</Link>.
+                    <p className="text-xs text-slate-500 leading-snug line-clamp-2">
+                      Data ini untuk verifikasi identitas & pencairan uang jalan.
                     </p>
                   )}
 

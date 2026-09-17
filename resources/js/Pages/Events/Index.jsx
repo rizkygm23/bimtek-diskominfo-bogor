@@ -183,12 +183,12 @@ export default function Index({ events, registeredEventIds = [], filters = {}, c
               <Calendar className="w-5 h-5 text-blue-900" />
               <span>Katalog Kegiatan BIMTEK Diskominfo</span>
             </h1>
-            <p className="text-xs text-slate-500 mt-1 max-w-2xl">
+            <p className="text-xs text-slate-500 mt-1 max-w-2xl line-clamp-2 leading-snug">
               {isAdmin 
-                ? 'Kelola daftar kegiatan BIMTEK, atur form pendaftaran kustom, dan pantau kuota peserta.'
+                ? 'Kelola kegiatan, form pendaftaran, dan kuota peserta.'
                 : isSpeaker
-                ? 'Daftar jadwal seluruh kegiatan BIMTEK Kabupaten Bogor dan materi penugasan narasumber.'
-                : 'Pilih tema kegiatan BIMTEK yang ingin Anda ikuti dan lakukan pendaftaran secara online.'}
+                ? 'Jadwal mengajar & materi penugasan narasumber.'
+                : 'Pilih kegiatan lalu daftar secara online.'}
             </p>
           </div>
 

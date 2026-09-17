@@ -125,10 +125,10 @@ export default function MyCertificates({ certificates = [], currentUser = {}, us
               {isPembicara ? 'Sertifikat Narasumber Saya' : 'Sertifikat Peserta Saya'}
             </h1>
             
-            <p className="text-blue-100 text-xs md:text-sm max-w-3xl font-semibold leading-relaxed">
-              {isPembicara 
-                ? 'Daftar seluruh sertifikat narasumber / pembicara resmi yang telah diunggah oleh Administrator Dinas Komunikasi dan Informatika Kabupaten Bogor. File asli (PDF / PNG / JPG) dapat diunduh atau dibuka secara langsung.'
-                : 'Daftar seluruh sertifikat peserta resmi yang telah diunggah oleh Administrator Dinas Komunikasi dan Informatika Kabupaten Bogor. File asli (PDF / PNG / JPG) dapat diunduh atau dibuka secara langsung.'}
+            <p className="text-blue-100 text-xs max-w-xl font-medium leading-snug line-clamp-2">
+              {isPembicara
+                ? 'Sertifikat narasumber yang diunggah admin — unduh atau buka file.'
+                : 'Sertifikat peserta yang diunggah admin — unduh atau buka file.'}
             </p>
           </div>
         </div>

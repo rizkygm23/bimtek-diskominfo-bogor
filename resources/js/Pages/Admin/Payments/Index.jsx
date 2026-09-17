@@ -113,7 +113,7 @@ export default function PaymentIndex({ payments, events, recipients, taxParamete
           eyebrow="Modul Keuangan Kedinasan Diskominfo"
           eyebrowIcon={Calculator}
           title="Administrasi Honorarium & Uang Jalan"
-          description="Pengelolaan rincian honorarium narasumber (perhitungan otomatis Bruto & PPh 21) dan biaya transport / uang jalan peserta secara terintegrasi langsung dengan data rekening bank terverifikasi."
+          description="Honorarium narasumber (PPh 21) dan uang jalan peserta."
         />
 
         {/* TOOLBAR CONTROLS */}

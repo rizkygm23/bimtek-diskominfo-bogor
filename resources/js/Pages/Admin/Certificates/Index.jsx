@@ -157,7 +157,7 @@ export default function CertificateIndex({ events, currentEvent, adminRows = [],
           eyebrow="Repository Sertifikat Kegiatan"
           eyebrowIcon={FolderArchive}
           title="Repository Sertifikat Digital BIMTEK"
-          description="Kelola berkas sertifikat resmi seluruh peserta dan narasumber per kegiatan. Mendukung unggah banyak file sekaligus atau file ZIP dengan pencocokan otomatis berbasis NIK & kode registrasi."
+          description="Unggah & kelola sertifikat peserta/narasumber per kegiatan."
           actions={
             <div className="flex flex-wrap items-center gap-2">
               <LiveConnectionBadge isConnected={isConnected} />
@@ -477,8 +477,8 @@ export default function CertificateIndex({ events, currentEvent, adminRows = [],
                   <span>PANDUAN NAMA FILE &amp; PENCOCOKAN OTOMATIS</span>
                 </strong>
 
-                <p className="text-blue-900/80 leading-relaxed text-[11px]">
-                  Sistem mencocokkan tiap file ke peserta/narasumber berdasarkan prioritas berikut. Huruf besar/kecil <strong>tidak memengaruhi</strong> pencocokan.
+                <p className="text-blue-900/80 leading-snug text-[11px] line-clamp-2">
+                  Nama file dicocokkan otomatis (NIK / kode registrasi / nama). Huruf besar-kecil diabaikan.
                 </p>
 
                 {/* TABEL ATURAN NAMING */}

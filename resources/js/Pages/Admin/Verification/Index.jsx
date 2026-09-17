@@ -88,8 +88,8 @@ export default function VerificationIndex({ profiles, events = [], filters }) {
               <span>Modul Keamanan & Verifikasi Administrasi</span>
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">Verifikasi Berkas KTP, NPWP & Rekening</h1>
-            <p className="text-blue-100 text-xs md:text-sm max-w-3xl">
-              Verifikasi keabsahan identitas NIK, foto KTP, NPWP, dan rekening bank peserta & narasumber sebelum pencairan honorarium atau uang jalan kedinasan. Dokumen sensitif terlindungi secara private server-side.
+            <p className="text-blue-100 text-xs max-w-xl leading-snug line-clamp-2">
+              Periksa NIK, KTP, NPWP, dan rekening sebelum pencairan.
             </p>
           </div>
         </div>
