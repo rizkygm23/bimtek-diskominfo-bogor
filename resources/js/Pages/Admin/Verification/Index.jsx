@@ -1,46 +1,54 @@
 import React, { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
+import SearchableEventSelect from '@/Components/SearchableEventSelect';
 import { 
   ShieldCheck, 
   Search, 
   CheckCircle2, 
   XCircle, 
   AlertTriangle, 
-  FileText, 
   Eye, 
-  CreditCard,
   Building,
-  User,
-  Phone,
   FileCheck
 } from 'lucide-react';
 
-export default function VerificationIndex({ profiles, filters }) {
+export default function VerificationIndex({ profiles, events = [], filters }) {
   const [role, setRole] = useState(filters.role || 'peserta');
   const [status, setStatus] = useState(filters.status || 'all');
   const [search, setSearch] = useState(filters.search || '');
+  const [eventId, setEventId] = useState(filters.event_id || '');
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [notes, setNotes] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
 
-  const handleFilter = (newRole, newStatus) => {
-    setRole(newRole);
-    setStatus(newStatus);
+  const applyFilters = (overrides = {}) => {
+    const next = {
+      role,
+      status,
+      search,
+      event_id: eventId,
+      ...overrides,
+    };
+    setRole(next.role);
+    setStatus(next.status);
+    setSearch(next.search ?? '');
+    setEventId(next.event_id ?? '');
     router.get('/admin/verifications', {
-      role: newRole,
-      status: newStatus,
-      search: search,
+      role: next.role,
+      status: next.status,
+      search: next.search || undefined,
+      event_id: next.event_id || undefined,
     }, { preserveState: true });
+  };
+
+  const handleFilter = (newRole, newStatus) => {
+    applyFilters({ role: newRole, status: newStatus });
   };
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    router.get('/admin/verifications', {
-      role,
-      status,
-      search,
-    }, { preserveState: true });
+    applyFilters({ search });
   };
 
   const openUpdateModal = (profile) => {
@@ -132,17 +140,37 @@ export default function VerificationIndex({ profiles, filters }) {
 
           </div>
 
-          {/* SEARCH BAR */}
-          <form onSubmit={handleSearchSubmit} className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={`Cari nama, NIK, NPWP atau ${role === 'peserta' ? 'instansi peserta' : 'instansi narasumber'}...`}
-              className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-blue-900 focus:bg-white transition-all"
-            />
-          </form>
+          {/* EVENT FILTER + SEARCH */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                Filter Kegiatan BIMTEK
+              </label>
+              <SearchableEventSelect
+                events={events}
+                value={eventId}
+                onChange={(id) => applyFilters({ event_id: id })}
+                allowEmpty
+                emptyLabel="Semua Kegiatan BIMTEK"
+                placeholder="Cari / pilih kegiatan..."
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                Cari Identitas
+              </label>
+              <form onSubmit={handleSearchSubmit} className="relative">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder={`Cari nama, NIK, NPWP atau ${role === 'peserta' ? 'instansi peserta' : 'instansi narasumber'}...`}
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs outline-none focus:border-blue-900 focus:bg-white transition-all"
+                />
+              </form>
+            </div>
+          </div>
         </div>
 
         {/* TABLE OF PROFILES */}

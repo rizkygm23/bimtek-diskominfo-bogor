@@ -19,7 +19,9 @@ class PaymentController extends Controller
         $type = $request->query('type', 'pembicara'); // 'pembicara' or 'peserta'
         $eventId = $request->query('event_id');
 
-        $events = BimtekEvent::orderBy('start_date', 'desc')->get();
+        $events = BimtekEvent::query()
+            ->orderBy('start_date', 'desc')
+            ->get(['id', 'title', 'start_date', 'end_date', 'status', 'location']);
 
         $query = PaymentComponent::with(['event', 'user']);
 

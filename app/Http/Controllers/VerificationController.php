@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\ParticipantProfile;
 use App\Models\SpeakerProfile;
+use App\Models\BimtekEvent;
 use App\Models\ActivityLog;
 
 class VerificationController extends Controller
@@ -15,16 +16,34 @@ class VerificationController extends Controller
         $role = $request->query('role', 'peserta'); // 'peserta' or 'pembicara'
         $status = $request->query('status', 'all');
         $search = $request->query('search', '');
+        $eventId = $request->query('event_id');
+
+        // Light list for searchable event filter (id + title + date only)
+        $events = BimtekEvent::query()
+            ->orderBy('start_date', 'desc')
+            ->get(['id', 'title', 'start_date', 'end_date', 'status', 'location']);
 
         if ($role === 'peserta') {
             $query = ParticipantProfile::with('user');
             if ($status !== 'all') {
                 $query->where('verification_status', $status);
             }
+            if ($eventId) {
+                $query->whereHas('user.registrations', function ($q) use ($eventId) {
+                    $q->where('bimtek_event_id', $eventId);
+                });
+            }
             if ($search) {
-                $query->whereHas('user', function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%");
-                })->orWhere('nik', 'like', "%{$search}%")->orWhere('npwp', 'like', "%{$search}%");
+                $query->where(function ($q) use ($search) {
+                    $q->whereHas('user', function ($uq) use ($search) {
+                        $uq->where('name', 'like', "%{$search}%")
+                           ->orWhere('email', 'like', "%{$search}%")
+                           ->orWhere('instansi', 'like', "%{$search}%");
+                    })
+                    ->orWhere('nik', 'like', "%{$search}%")
+                    ->orWhere('npwp', 'like', "%{$search}%")
+                    ->orWhere('instansi', 'like', "%{$search}%");
+                });
             }
             $profiles = $query->latest()->paginate(15)->withQueryString();
         } else {
@@ -32,20 +51,35 @@ class VerificationController extends Controller
             if ($status !== 'all') {
                 $query->where('verification_status', $status);
             }
+            if ($eventId) {
+                // SpeakerProfile → User → Speaker → EventSpeaker
+                $query->whereHas('user.speakerProfile.eventAssignments', function ($q) use ($eventId) {
+                    $q->where('bimtek_event_id', $eventId);
+                });
+            }
             if ($search) {
-                $query->whereHas('user', function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%");
-                })->orWhere('nip_nik', 'like', "%{$search}%")->orWhere('npwp', 'like', "%{$search}%");
+                $query->where(function ($q) use ($search) {
+                    $q->whereHas('user', function ($uq) use ($search) {
+                        $uq->where('name', 'like', "%{$search}%")
+                           ->orWhere('email', 'like', "%{$search}%")
+                           ->orWhere('instansi', 'like', "%{$search}%");
+                    })
+                    ->orWhere('nip_nik', 'like', "%{$search}%")
+                    ->orWhere('npwp', 'like', "%{$search}%")
+                    ->orWhere('instansi', 'like', "%{$search}%");
+                });
             }
             $profiles = $query->latest()->paginate(15)->withQueryString();
         }
 
         return Inertia::render('Admin/Verification/Index', [
             'profiles' => $profiles,
+            'events' => $events,
             'filters' => [
                 'role' => $role,
                 'status' => $status,
                 'search' => $search,
+                'event_id' => $eventId ? (string) $eventId : '',
             ],
         ]);
     }

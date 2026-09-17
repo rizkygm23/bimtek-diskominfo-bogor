@@ -18,6 +18,7 @@ import {
   AlignCenter,
   AlignRight
 } from 'lucide-react';
+import SearchableEventSelect from '@/Components/SearchableEventSelect';
 
 export default function HonorariumReport({ events = [], selectedEventId, currentEvent, template, payments = [] }) {
   // Built-in Presets for Quick Selection
@@ -347,15 +348,13 @@ export default function HonorariumReport({ events = [], selectedEventId, current
               <label className="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">
                 Pilih Kegiatan BIMTEK:
               </label>
-              <select
+              <SearchableEventSelect
+                events={events}
                 value={selectedEventId}
-                onChange={(e) => handleSelectEvent(e.target.value)}
-                className="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 outline-none focus:border-blue-900 focus:bg-white"
-              >
-                {events.map((ev) => (
-                  <option key={ev.id} value={ev.id}>{ev.title}</option>
-                ))}
-              </select>
+                onChange={(id) => handleSelectEvent(id)}
+                required
+                placeholder="Cari / pilih kegiatan BIMTEK..."
+              />
             </div>
 
             {/* PRESET FORMAT SELECTOR */}

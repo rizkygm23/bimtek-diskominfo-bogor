@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useForm, Link, router } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
+import SearchableEventSelect from '@/Components/SearchableEventSelect';
 import { 
   DollarSign, 
   Plus, 
@@ -131,15 +132,13 @@ export default function Honorarium({ events, allSpeakers }) {
             <form onSubmit={handleAssignSubmit} className="space-y-3">
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Pilih Kegiatan BIMTEK</label>
-                <select
+                <SearchableEventSelect
+                  events={events}
                   value={selectedEventId}
-                  onChange={(e) => setSelectedEventId(e.target.value)}
-                  className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-lg text-xs text-slate-900 dark:text-white font-bold"
-                >
-                  {events.map((ev) => (
-                    <option key={ev.id} value={ev.id}>{ev.title}</option>
-                  ))}
-                </select>
+                  onChange={(id) => setSelectedEventId(id)}
+                  required
+                  placeholder="Cari / pilih kegiatan..."
+                />
               </div>
 
               <div>
@@ -248,15 +247,14 @@ export default function Honorarium({ events, allSpeakers }) {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
               <h2 className="text-xs font-bold text-slate-900 dark:text-white">Rincian Pembayaran Honorarium</h2>
               
-              <select
+              <SearchableEventSelect
+                events={events}
                 value={selectedEventId}
-                onChange={(e) => setSelectedEventId(e.target.value)}
-                className="px-2.5 py-1 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-lg text-xs text-blue-900 dark:text-amber-400 font-bold"
-              >
-                {events.map((ev) => (
-                  <option key={ev.id} value={ev.id}>{ev.title}</option>
-                ))}
-              </select>
+                onChange={(id) => setSelectedEventId(id)}
+                required
+                className="w-full sm:w-64"
+                placeholder="Cari / pilih kegiatan..."
+              />
             </div>
 
             {currentEvent && currentEvent.event_speakers && currentEvent.event_speakers.length > 0 ? (

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Head, useForm, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import PageHeader from '@/Components/PageHeader';
+import SearchableEventSelect from '@/Components/SearchableEventSelect';
 import {
   CreditCard,
   Plus,
@@ -144,16 +145,14 @@ export default function PaymentIndex({ payments, events, recipients, taxParamete
 
           {/* EVENT FILTER & ADD BUTTON */}
           <div className="flex flex-wrap items-center gap-3 min-w-0">
-            <select
+            <SearchableEventSelect
+              events={events}
               value={eventId}
-              onChange={(e) => handleFilter(type, e.target.value)}
-              className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-medium text-slate-900 outline-none focus:border-blue-900 max-w-full min-w-0"
-            >
-              <option value="">Semua Kegiatan BIMTEK</option>
-              {events.map((ev) => (
-                <option key={ev.id} value={ev.id}>{ev.title}</option>
-              ))}
-            </select>
+              onChange={(id) => handleFilter(type, id)}
+              allowEmpty
+              emptyLabel="Semua Kegiatan BIMTEK"
+              className="w-full sm:w-80 max-w-full min-w-0"
+            />
 
             <button
               onClick={() => {
@@ -280,16 +279,13 @@ export default function PaymentIndex({ payments, events, recipients, taxParamete
                 {/* SELECT EVENT */}
                 <div>
                   <label className="font-bold text-slate-900 block mb-1">Kegiatan BIMTEK:</label>
-                  <select
+                  <SearchableEventSelect
+                    events={events}
                     value={data.event_id}
-                    onChange={(e) => setData('event_id', e.target.value)}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-blue-900"
+                    onChange={(id) => setData('event_id', id)}
                     required
-                  >
-                    {events.map((ev) => (
-                      <option key={ev.id} value={ev.id}>{ev.title}</option>
-                    ))}
-                  </select>
+                    placeholder="Cari / pilih kegiatan BIMTEK..."
+                  />
                 </div>
 
                 {/* SELECT RECIPIENT */}

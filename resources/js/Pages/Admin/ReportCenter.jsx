@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { usePage, Link } from '@inertiajs/react';
+import { usePage, Link, router } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import ResizableLogoCrud from '@/Components/ResizableLogoCrud';
+import SearchableEventSelect from '@/Components/SearchableEventSelect';
 import { 
   FileSpreadsheet, 
   FileText, 
@@ -38,7 +39,7 @@ export default function ReportCenter({
   const [fontSize, setFontSize] = useState('11pt');
   const [isEditable, setIsEditable] = useState(true);
 
-  const activeEvent = events.find(e => e.id === Number(eventId)) || events[0] || currentEvent;
+  const activeEvent = currentEvent || events.find(e => e.id === Number(eventId)) || events[0];
 
   // Initialize editable table rows for attendance
   const [attendanceRows, setAttendanceRows] = useState([]);
@@ -315,15 +316,19 @@ export default function ReportCenter({
               <label className="block text-[10px] font-black text-slate-700 uppercase tracking-wider mb-1">
                 Pilih Kegiatan BIMTEK:
               </label>
-              <select
+              <SearchableEventSelect
+                events={events}
                 value={eventId}
-                onChange={(e) => setEventId(e.target.value)}
-                className="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 outline-none focus:border-blue-900 focus:bg-white"
-              >
-                {events.map((ev) => (
-                  <option key={ev.id} value={ev.id}>{ev.title}</option>
-                ))}
-              </select>
+                onChange={(id) => {
+                  setEventId(id);
+                  router.get('/admin/report-center', {
+                    template: templateCode,
+                    event_id: id,
+                  }, { preserveState: true, preserveScroll: true });
+                }}
+                required
+                placeholder="Cari / pilih kegiatan BIMTEK..."
+              />
             </div>
 
             {/* PAPER SIZE & ORIENTATION */}

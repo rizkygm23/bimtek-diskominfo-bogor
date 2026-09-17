@@ -11,15 +11,23 @@ use Inertia\Inertia;
 
 class ReportCenterController extends Controller
 {
+    /**
+     * Light event list for searchable dropdowns (avoids nesting all registrations).
+     */
+    private function eventOptions()
+    {
+        return BimtekEvent::query()
+            ->orderBy('start_date', 'desc')
+            ->get(['id', 'title', 'start_date', 'end_date', 'status', 'location']);
+    }
+
     public function index(Request $request)
     {
         $user = auth()->user();
         $isAdmin = $user && $user->role === 'admin';
 
         $templates = DocumentTemplate::all();
-        $events = BimtekEvent::with(['registrations.user', 'registrations.attendances', 'eventSpeakers.speaker'])
-            ->orderBy('start_date', 'desc')
-            ->get();
+        $events = $this->eventOptions();
 
         $selectedTemplateCode = $request->query('template', 'REKAP_ABSENSI');
         $selectedEventId = $request->query('event_id', $events->first()?->id);
@@ -27,7 +35,9 @@ class ReportCenterController extends Controller
         $currentTemplate = DocumentTemplate::where('template_code', $selectedTemplateCode)->first() 
             ?? $templates->first();
         $currentEvent = BimtekEvent::with(['registrations.user', 'registrations.attendances', 'eventSpeakers.speaker'])
-            ->find($selectedEventId) ?? $events->first();
+            ->find($selectedEventId) ?? BimtekEvent::with(['registrations.user', 'registrations.attendances', 'eventSpeakers.speaker'])
+                ->orderBy('start_date', 'desc')
+                ->first();
 
         // FOR PESERTA / PEMBICARA: Load ONLY events they registered for or spoke at
         $myRegisteredEvents = [];
@@ -151,13 +161,7 @@ class ReportCenterController extends Controller
 
     public function participantsReport(Request $request)
     {
-        $events = BimtekEvent::with([
-            'registrations.user.participantProfile', 
-            'registrations.attendances', 
-            'eventSpeakers.speaker'
-        ])
-        ->orderBy('start_date', 'desc')
-        ->get();
+        $events = $this->eventOptions();
 
         $selectedEventId = $request->query('event_id', $events->first()?->id);
         $currentEvent = BimtekEvent::with([
@@ -165,7 +169,16 @@ class ReportCenterController extends Controller
             'registrations.attendances', 
             'eventSpeakers.speaker'
         ])
-        ->find($selectedEventId) ?? $events->first();
+        ->find($selectedEventId);
+
+        if (!$currentEvent && $events->isNotEmpty()) {
+            $currentEvent = BimtekEvent::with([
+                'registrations.user.participantProfile',
+                'registrations.attendances',
+                'eventSpeakers.speaker'
+            ])->find($events->first()->id);
+            $selectedEventId = $events->first()->id;
+        }
 
         // Check event-specific template first, fallback to general template
         $template = DocumentTemplate::where('template_code', 'DAFTAR_HADIR_EVENT_' . $selectedEventId)->first() 
@@ -265,13 +278,7 @@ class ReportCenterController extends Controller
 
     public function honorariumReport(Request $request)
     {
-        $events = BimtekEvent::with([
-            'registrations.user.participantProfile', 
-            'registrations.attendances', 
-            'eventSpeakers.speaker'
-        ])
-        ->orderBy('start_date', 'desc')
-        ->get();
+        $events = $this->eventOptions();
 
         $selectedEventId = $request->query('event_id', $events->first()?->id);
         $currentEvent = BimtekEvent::with([
@@ -279,7 +286,16 @@ class ReportCenterController extends Controller
             'registrations.attendances', 
             'eventSpeakers.speaker'
         ])
-        ->find($selectedEventId) ?? $events->first();
+        ->find($selectedEventId);
+
+        if (!$currentEvent && $events->isNotEmpty()) {
+            $currentEvent = BimtekEvent::with([
+                'registrations.user.participantProfile',
+                'registrations.attendances',
+                'eventSpeakers.speaker'
+            ])->find($events->first()->id);
+            $selectedEventId = $events->first()->id;
+        }
 
         // Check event-specific template first, fallback to general template
         $template = DocumentTemplate::where('template_code', 'HONORARIUM_EVENT_' . $selectedEventId)->first() 
@@ -326,13 +342,17 @@ class ReportCenterController extends Controller
 
     public function speakersReport(Request $request)
     {
-        $events = BimtekEvent::with(['eventSpeakers.speaker', 'registrations.user'])
-            ->orderBy('start_date', 'desc')
-            ->get();
+        $events = $this->eventOptions();
 
         $selectedEventId = $request->query('event_id', $events->first()?->id);
         $currentEvent = BimtekEvent::with(['eventSpeakers.speaker', 'registrations.user'])
-            ->find($selectedEventId) ?? $events->first();
+            ->find($selectedEventId);
+
+        if (!$currentEvent && $events->isNotEmpty()) {
+            $currentEvent = BimtekEvent::with(['eventSpeakers.speaker', 'registrations.user'])
+                ->find($events->first()->id);
+            $selectedEventId = $events->first()->id;
+        }
 
         $template = DocumentTemplate::where('template_code', 'HONOR_PEMBICARA')->first();
 

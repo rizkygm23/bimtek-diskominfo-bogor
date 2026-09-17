@@ -18,6 +18,7 @@ import {
 import { useParticipantRealtime } from '@/Hooks/useParticipantRealtime';
 import LiveConnectionBadge from '@/Components/LiveConnectionBadge';
 import RealtimeToast from '@/Components/RealtimeToast';
+import SearchableEventSelect from '@/Components/SearchableEventSelect';
 
 export default function CertificateIndex({ events, currentEvent, adminRows = [], stats = {}, filters = {} }) {
   const [role, setRole] = useState(filters.role || 'all');
@@ -188,17 +189,14 @@ export default function CertificateIndex({ events, currentEvent, adminRows = [],
             <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 shrink-0">
               Kegiatan
             </label>
-            <select
+            <SearchableEventSelect
+              events={events}
               value={currentEvent?.id || ''}
-              onChange={(e) => handleFilter(role, certStatus, e.target.value)}
-              className="flex-1 sm:max-w-md bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-medium text-slate-900 outline-none focus:border-blue-900 focus:bg-white cursor-pointer"
-            >
-              {events.map((ev) => (
-                <option key={ev.id} value={ev.id}>
-                  {ev.title}
-                </option>
-              ))}
-            </select>
+              onChange={(id) => handleFilter(role, certStatus, id)}
+              className="flex-1 sm:max-w-md"
+              required
+              placeholder="Cari / pilih kegiatan BIMTEK..."
+            />
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 border-t border-slate-100 pt-4">

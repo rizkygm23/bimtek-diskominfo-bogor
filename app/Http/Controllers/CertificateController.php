@@ -24,7 +24,9 @@ class CertificateController extends Controller
      */
     public function index(Request $request)
     {
-        $events = BimtekEvent::orderBy('start_date', 'desc')->get();
+        $events = BimtekEvent::query()
+            ->orderBy('start_date', 'desc')
+            ->get(['id', 'title', 'start_date', 'end_date', 'status', 'location']);
         $selectedEventId = $request->query('event_id', $events->first()?->id);
         $roleFilter = $request->query('role', 'all'); // 'all', 'peserta', 'pembicara'
         $certFilter = $request->query('cert_status', 'all'); // 'all', 'has_cert', 'no_cert'

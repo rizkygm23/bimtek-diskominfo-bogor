@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link } from '@inertiajs/react';
 import { Printer, Edit3, Plus, Trash2, Mic, ArrowLeft } from 'lucide-react';
+import SearchableEventSelect from '@/Components/SearchableEventSelect';
 
 export default function SpeakersReport({ events = [], selectedEventId, currentEvent }) {
   const [paperSize, setPaperSize] = useState('A4');
@@ -165,15 +166,14 @@ export default function SpeakersReport({ events = [], selectedEventId, currentEv
 
             {/* EVENT SELECTOR */}
             {events.length > 0 && (
-              <select
+              <SearchableEventSelect
+                events={events}
                 value={selectedEventId}
-                onChange={(e) => handleSelectEvent(e.target.value)}
-                className="max-w-full min-w-0 px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-blue-950 outline-none"
-              >
-                {events.map((ev) => (
-                  <option key={ev.id} value={ev.id}>{ev.title}</option>
-                ))}
-              </select>
+                onChange={(id) => handleSelectEvent(id)}
+                required
+                className="w-full sm:w-72 max-w-full min-w-0"
+                placeholder="Cari / pilih kegiatan..."
+              />
             )}
 
             <button

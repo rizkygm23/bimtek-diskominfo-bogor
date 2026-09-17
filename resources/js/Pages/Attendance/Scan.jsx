@@ -21,6 +21,7 @@ import {
   UserPlus,
   Search
 } from 'lucide-react';
+import SearchableEventSelect from '@/Components/SearchableEventSelect';
 
 // Decode QR dari file foto dengan strategi berlapis agar andal di HP:
 // 1) BarcodeDetector native (Chrome/Edge Android) — decoder sistem, paling
@@ -413,17 +414,15 @@ export default function Scan({ events, myEvents, selectedEventId, recentAttendan
 
           {isAdmin && (
             <div className="flex flex-col sm:flex-row items-end gap-2 shrink-0">
-              <div className="w-full sm:w-auto">
+              <div className="w-full sm:w-72">
                 <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">Kegiatan BIMTEK:</label>
-                <select
+                <SearchableEventSelect
+                  events={events}
                   value={activeEventId}
-                  onChange={(e) => handleEventSwitch(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-extrabold text-slate-900"
-                >
-                  {events.map((ev) => (
-                    <option key={ev.id} value={ev.id}>{ev.title}</option>
-                  ))}
-                </select>
+                  onChange={(id) => handleEventSwitch(id)}
+                  required
+                  placeholder="Cari / pilih kegiatan..."
+                />
               </div>
               <button
                 type="button"
@@ -690,22 +689,15 @@ export default function Scan({ events, myEvents, selectedEventId, recentAttendan
 
                     {/* Pilihan switcher event kegiatan */}
                     {availableEvents.length > 1 && (
-                      <div className="pt-2 flex flex-wrap gap-1.5 items-center">
+                      <div className="pt-2 space-y-1.5">
                         <span className="text-[10px] text-slate-500 font-medium">Pilih Kegiatan Lain:</span>
-                        {availableEvents.map(ev => (
-                          <button
-                            key={ev.id}
-                            type="button"
-                            onClick={() => handleEventSwitch(ev.id)}
-                            className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
-                              Number(activeEventId) === Number(ev.id)
-                                ? 'bg-blue-900 text-white'
-                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                            }`}
-                          >
-                            {ev.title}
-                          </button>
-                        ))}
+                        <SearchableEventSelect
+                          events={availableEvents}
+                          value={activeEventId}
+                          onChange={(id) => handleEventSwitch(id)}
+                          required
+                          placeholder="Cari / pilih kegiatan..."
+                        />
                       </div>
                     )}
                   </div>

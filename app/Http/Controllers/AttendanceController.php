@@ -31,7 +31,7 @@ class AttendanceController extends Controller
               });
         })
             ->orderBy('start_date', 'desc')
-            ->get();
+            ->get(['id', 'title', 'start_date', 'end_date', 'status', 'location']);
 
         $selectedEventId = $request->query('event_id', $allEvents->first()?->id);
 
