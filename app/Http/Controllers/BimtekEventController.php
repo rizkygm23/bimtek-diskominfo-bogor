@@ -36,11 +36,37 @@ class BimtekEventController extends Controller
         ]);
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $events = BimtekEvent::withCount('registrations')
-            ->orderBy('start_date', 'desc')
-            ->get();
+        $scope = $request->query('scope', 'active'); // active | archive | all
+        $search = trim((string) $request->query('search', ''));
+
+        $query = BimtekEvent::withCount('registrations');
+
+        if ($scope === 'active') {
+            $query->where(function ($q) {
+                $q->where(function ($q2) {
+                    $q2->whereNull('end_date')
+                       ->orWhere('end_date', '>=', now());
+                })->where('status', '!=', 'completed');
+            });
+        } elseif ($scope === 'archive') {
+            $query->where(function ($q) {
+                $q->where('end_date', '<', now())
+                  ->orWhere('status', 'completed');
+            });
+        }
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('location', 'like', "%{$search}%");
+            });
+        }
+
+        $events = $query->orderBy('start_date', 'desc')
+            ->paginate(12)
+            ->withQueryString();
 
         $userRegistrationEventIds = [];
         if (auth()->check()) {
@@ -49,9 +75,28 @@ class BimtekEventController extends Controller
                 ->toArray();
         }
 
+        $counts = [
+            'active' => BimtekEvent::query()->where(function ($q) {
+                $q->where(function ($q2) {
+                    $q2->whereNull('end_date')
+                       ->orWhere('end_date', '>=', now());
+                })->where('status', '!=', 'completed');
+            })->count(),
+            'archive' => BimtekEvent::query()->where(function ($q) {
+                $q->where('end_date', '<', now())
+                  ->orWhere('status', 'completed');
+            })->count(),
+            'all' => BimtekEvent::count(),
+        ];
+
         return Inertia::render('Events/Index', [
             'events' => $events,
             'registeredEventIds' => $userRegistrationEventIds,
+            'filters' => [
+                'scope' => $scope,
+                'search' => $search,
+            ],
+            'counts' => $counts,
         ]);
     }
 
@@ -319,20 +364,30 @@ class BimtekEventController extends Controller
         return back()->with('success', "Data Riwayat Kegiatan BIMTEK '{$event->title}' berhasil ditambahkan beserta Pemateri dan {$importedCount} data audiens peserta!");
     }
 
-    public function history()
+    public function history(Request $request)
     {
-        $events = BimtekEvent::with([
-            'registrations.user',
-            'registrations.attendances',
-            'eventSpeakers.speaker'
-        ])
-        ->orderBy('start_date', 'desc')
-        ->get();
+        $scope = $request->query('scope', 'all'); // all | year
+        $year = $request->query('year');
+        $detailId = $request->query('detail_id');
 
-        $eventsHistory = $events->map(function ($ev) {
-            $totalRegistrations = $ev->registrations->count();
-            $attendedRegistrations = $ev->registrations->filter(fn($r) => $r->attendances->count() > 0);
-            $totalAttended = $attendedRegistrations->count();
+        $query = BimtekEvent::query()
+            ->withCount(['registrations'])
+            ->with(['eventSpeakers.speaker:id,name'])
+            ->withCount(['registrations as attended_registrations_count' => function ($q) {
+                $q->whereHas('attendances');
+            }]);
+
+        if ($year) {
+            $query->whereYear('start_date', $year);
+        } elseif ($scope === 'recent') {
+            $query->where('start_date', '>=', now()->subYear());
+        }
+
+        $events = $query->orderBy('start_date', 'desc')->paginate(15)->withQueryString();
+
+        $eventsHistory = $events->getCollection()->map(function ($ev) {
+            $totalRegistrations = $ev->registrations_count ?? 0;
+            $totalAttended = $ev->attended_registrations_count ?? 0;
 
             return [
                 'id' => $ev->id,
@@ -353,25 +408,75 @@ class BimtekEventController extends Controller
                     'name' => $es->speaker?->name,
                     'topic' => $es->topic,
                 ]),
-                'attendees_list' => $attendedRegistrations->map(function ($r) {
-                    $att = $r->attendances->first();
-                    return [
-                        'registration_id' => $r->id,
-                        'registration_code' => $r->registration_code,
-                        'name' => $r->user?->name,
-                        'nip_nik' => $r->user?->nip_nik,
-                        'instansi' => $r->user?->instansi,
-                        'email' => $r->user?->email,
-                        'checked_in_at' => $att?->checked_in_at ? $att->checked_in_at->format('d M Y, H:i') : '-',
-                        'method' => $att?->check_in_method === 'excel_import' ? 'Import Excel' : 'Scan QR Code',
-                        'certificate_url' => $r->certificate_path ? asset('storage/' . $r->certificate_path) : null,
-                    ];
-                })->values(),
+                // Loaded on demand via detail_id — keeps list payload light
+                'attendees_list' => [],
             ];
         });
 
+        $events->setCollection($eventsHistory);
+
+        $eventDetail = null;
+        if ($detailId) {
+            $detail = BimtekEvent::with([
+                'registrations.user',
+                'registrations.attendances',
+                'eventSpeakers.speaker',
+            ])->find($detailId);
+
+            if ($detail) {
+                $attended = $detail->registrations->filter(fn ($r) => $r->attendances->count() > 0);
+                $eventDetail = [
+                    'id' => $detail->id,
+                    'title' => $detail->title,
+                    'start_date' => $detail->start_date,
+                    'end_date' => $detail->end_date,
+                    'location' => $detail->location,
+                    'total_registrations' => $detail->registrations->count(),
+                    'total_attended' => $attended->count(),
+                    'attendance_percentage' => $detail->registrations->count() > 0
+                        ? round(($attended->count() / $detail->registrations->count()) * 100, 1)
+                        : 0,
+                    'speakers' => $detail->eventSpeakers->map(fn ($es) => [
+                        'id' => $es->speaker_id,
+                        'name' => $es->speaker?->name,
+                        'topic' => $es->topic,
+                    ]),
+                    'attendees_list' => $attended->map(function ($r) {
+                        $att = $r->attendances->first();
+                        return [
+                            'registration_id' => $r->id,
+                            'registration_code' => $r->registration_code,
+                            'name' => $r->user?->name,
+                            'nip_nik' => $r->user?->nip_nik,
+                            'instansi' => $r->user?->instansi,
+                            'email' => $r->user?->email,
+                            'checked_in_at' => $att?->checked_in_at ? $att->checked_in_at->format('d M Y, H:i') : '-',
+                            'method' => $att?->check_in_method === 'excel_import' ? 'Import Excel' : 'Scan QR Code',
+                            'certificate_url' => $r->certificate_path ? asset('storage/' . $r->certificate_path) : null,
+                        ];
+                    })->values(),
+                ];
+            }
+        }
+
+        $availableYears = BimtekEvent::query()
+            ->whereNotNull('start_date')
+            ->orderByDesc('start_date')
+            ->get(['start_date'])
+            ->map(fn ($e) => $e->start_date?->format('Y'))
+            ->filter()
+            ->unique()
+            ->values();
+
         return Inertia::render('Admin/EventHistory', [
-            'eventsHistory' => $eventsHistory,
+            'eventsHistory' => $events,
+            'eventDetail' => $eventDetail,
+            'filters' => [
+                'scope' => $scope,
+                'year' => $year,
+                'detail_id' => $detailId,
+            ],
+            'availableYears' => $availableYears,
         ]);
     }
 

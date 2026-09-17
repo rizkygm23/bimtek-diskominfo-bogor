@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useForm, Link, usePage } from '@inertiajs/react';
+import React, { useState, useEffect } from 'react';
+import { useForm, Link, usePage, router } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import {
   History,
@@ -16,16 +16,54 @@ import {
   ArrowRight
 } from 'lucide-react';
 
-export default function EventHistory({ eventsHistory = [] }) {
+export default function EventHistory({
+  eventsHistory = [],
+  eventDetail = null,
+  filters = {},
+  availableYears = [],
+}) {
   const { auth } = usePage().props;
   const isAdmin = auth?.user?.role === 'admin';
 
-  const [selectedEventId, setSelectedEventId] = useState(eventsHistory[0]?.id || '');
+  const historyList = Array.isArray(eventsHistory?.data)
+    ? eventsHistory.data
+    : (Array.isArray(eventsHistory) ? eventsHistory : []);
+
+  const [selectedEventId, setSelectedEventId] = useState(historyList[0]?.id || '');
   const [activeModalEvent, setActiveModalEvent] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showInputForm, setShowInputForm] = useState(true);
 
-  const activeEvent = eventsHistory.find(e => e.id === Number(selectedEventId)) || eventsHistory[0];
+  useEffect(() => {
+    if (historyList.length && !historyList.some((e) => String(e.id) === String(selectedEventId))) {
+      setSelectedEventId(historyList[0]?.id || '');
+    }
+  }, [historyList, selectedEventId]);
+
+  useEffect(() => {
+    if (eventDetail) {
+      setActiveModalEvent(eventDetail);
+    }
+  }, [eventDetail]);
+
+  const activeEvent = historyList.find(e => e.id === Number(selectedEventId)) || historyList[0];
+
+  const applyHistoryFilters = (overrides = {}) => {
+    router.get('/admin/event-history', {
+      year: overrides.year !== undefined ? (overrides.year || undefined) : (filters.year || undefined),
+      detail_id: overrides.detail_id !== undefined ? (overrides.detail_id || undefined) : undefined,
+      page: overrides.page,
+    }, { preserveState: true, preserveScroll: true });
+  };
+
+  const openAttendanceModal = (ev) => {
+    applyHistoryFilters({ detail_id: ev.id, year: filters.year });
+  };
+
+  const closeAttendanceModal = () => {
+    setActiveModalEvent(null);
+    applyHistoryFilters({ detail_id: null, year: filters.year });
+  };
 
   // Form for New Past Event Entry
   const createForm = useForm({
@@ -78,16 +116,16 @@ export default function EventHistory({ eventsHistory = [] }) {
     });
   };
 
-  // Filtered Events History
-  const filteredEvents = eventsHistory.filter(ev => 
-    ev.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    ev.location.toLowerCase().includes(searchTerm.toLowerCase())
+  // Filtered Events History (client filter on current page)
+  const filteredEvents = historyList.filter(ev =>
+    (ev.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (ev.location || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Overall Statistics
-  const totalEvents = eventsHistory.length;
-  const totalAllAttended = eventsHistory.reduce((acc, ev) => acc + ev.total_attended, 0);
-  const totalAllRegistrations = eventsHistory.reduce((acc, ev) => acc + ev.total_registrations, 0);
+  // Overall Statistics (current page aggregates; total from paginator)
+  const totalEvents = eventsHistory?.total ?? historyList.length;
+  const totalAllAttended = historyList.reduce((acc, ev) => acc + (ev.total_attended || 0), 0);
+  const totalAllRegistrations = historyList.reduce((acc, ev) => acc + (ev.total_registrations || 0), 0);
 
   return (
     <AppLayout title="Riwayat Kegiatan BIMTEK & Import Kehadiran Excel">
@@ -338,16 +376,28 @@ export default function EventHistory({ eventsHistory = [] }) {
               </p>
             </div>
 
-            {/* SEARCH FILTER */}
-            <div className="relative w-full sm:w-64">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Cari Judul Kegiatan..."
-                className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-blue-900"
-              />
+            {/* SEARCH FILTER + YEAR */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+              <select
+                value={filters.year || ''}
+                onChange={(e) => applyHistoryFilters({ year: e.target.value, page: 1 })}
+                className="px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 outline-none focus:border-blue-900"
+              >
+                <option value="">Semua Tahun</option>
+                {availableYears.map((y) => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+              <div className="relative w-full sm:w-64">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Cari Judul Kegiatan..."
+                  className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-blue-900"
+                />
+              </div>
             </div>
           </div>
 
@@ -407,7 +457,7 @@ export default function EventHistory({ eventsHistory = [] }) {
                   {/* ACTION BUTTONS */}
                   <div className="pt-3 border-t border-slate-200/80 flex flex-wrap items-center justify-between gap-2">
                     <button
-                      onClick={() => setActiveModalEvent(ev)}
+                      onClick={() => openAttendanceModal(ev)}
                       className="px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white font-extrabold text-xs rounded-xl shadow-xs flex items-center gap-1.5 cursor-pointer transition-transform active:scale-95"
                     >
                       <Eye className="w-4 h-4 text-amber-300" />
@@ -432,6 +482,34 @@ export default function EventHistory({ eventsHistory = [] }) {
             )}
           </div>
 
+          {eventsHistory?.links && eventsHistory.last_page > 1 && (
+            <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+              {eventsHistory.links.map((link, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  disabled={!link.url}
+                  onClick={() => {
+                    if (!link.url) return;
+                    const url = new URL(link.url, window.location.origin);
+                    applyHistoryFilters({
+                      year: filters.year,
+                      page: url.searchParams.get('page') || 1,
+                    });
+                  }}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    link.active
+                      ? 'bg-blue-900 text-white'
+                      : link.url
+                        ? 'bg-white border border-slate-200 text-slate-700 hover:border-blue-900'
+                        : 'bg-slate-50 text-slate-300 cursor-not-allowed'
+                  }`}
+                  dangerouslySetInnerHTML={{ __html: link.label }}
+                />
+              ))}
+            </div>
+          )}
+
         </div>
 
         {/* MODAL / DRAWER FOR DETAILED ATTENDEES OF SELECTED PAST EVENT */}
@@ -452,7 +530,7 @@ export default function EventHistory({ eventsHistory = [] }) {
                 </div>
 
                 <button
-                  onClick={() => setActiveModalEvent(null)}
+                  onClick={closeAttendanceModal}
                   className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white font-bold text-lg flex items-center justify-center transition-colors cursor-pointer"
                 >
                   &times;
@@ -477,8 +555,8 @@ export default function EventHistory({ eventsHistory = [] }) {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200">
-                      {activeModalEvent.attendees_list.length > 0 ? (
-                        activeModalEvent.attendees_list.map((att, idx) => (
+                      {(activeModalEvent.attendees_list || []).length > 0 ? (
+                        (activeModalEvent.attendees_list || []).map((att, idx) => (
                           <tr key={att.registration_id} className="hover:bg-slate-50">
                             <td className="p-3 text-center font-bold">{idx + 1}</td>
                             <td className="p-3 font-mono font-bold text-blue-900">{att.registration_code}</td>
@@ -518,7 +596,7 @@ export default function EventHistory({ eventsHistory = [] }) {
               {/* MODAL FOOTER */}
               <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end">
                 <button
-                  onClick={() => setActiveModalEvent(null)}
+                  onClick={closeAttendanceModal}
                   className="px-5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-extrabold text-xs rounded-xl cursor-pointer"
                 >
                   Tutup

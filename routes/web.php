@@ -109,7 +109,8 @@ Route::middleware('auth')->group(function () {
 
     // USER PROFILE & AVATAR LOGO UPLOAD
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    // POST + PUT: FormData (upload KTP/NPWP) tidak bisa pure PUT di browser — butuh POST + _method spoof
+    Route::match(['put', 'post'], '/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar');
 
     // PRIVATE SENSITIVE DOCUMENT STREAM
@@ -180,6 +181,7 @@ Route::middleware('auth')->group(function () {
 
         // PAYMENTS (HONORARIUM & TRANSPORT ALLOWANCE)
         Route::get('/admin/payments', [PaymentController::class, 'index'])->name('admin.payments');
+        Route::get('/admin/payments/recipients', [PaymentController::class, 'searchRecipients'])->name('admin.payments.recipients');
         Route::post('/admin/payments/store', [PaymentController::class, 'store'])->name('admin.payments.store');
         Route::post('/admin/payments/{id}/status', [PaymentController::class, 'updateStatus'])->name('admin.payments.update-status');
         Route::delete('/admin/payments/{id}', [PaymentController::class, 'destroy'])->name('admin.payments.destroy');

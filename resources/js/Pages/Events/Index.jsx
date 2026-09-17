@@ -20,18 +20,21 @@ import {
   ArrowRight
 } from 'lucide-react';
 
-export default function Index({ events, registeredEventIds = [] }) {
+export default function Index({ events, registeredEventIds = [], filters = {}, counts = {} }) {
   const { auth } = usePage().props;
   const user = auth?.user || {};
   const isAdmin = user?.role === 'admin';
   const isSpeaker = user?.role === 'pembicara';
+
+  const scope = filters.scope || 'active';
+  const eventList = Array.isArray(events?.data) ? events.data : (Array.isArray(events) ? events : []);
 
   const [showModal, setShowModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
   const [showAdminEntryModal, setShowAdminEntryModal] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState(null);
   const [entryRole, setEntryRole] = useState('peserta');
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(filters.search || '');
   const [copiedId, setCopiedId] = useState(null);
 
   // Form state for new / edit BIMTEK
@@ -150,10 +153,20 @@ export default function Index({ events, registeredEventIds = [] }) {
     setTimeout(() => setCopiedId(null), 2500);
   };
 
-  const filteredEvents = events.filter(e => 
-    e.title?.toLowerCase().includes(search.toLowerCase()) || 
-    e.location?.toLowerCase().includes(search.toLowerCase())
-  );
+  const applyCatalogFilters = (overrides = {}) => {
+    router.get('/events', {
+      scope: overrides.scope ?? scope,
+      search: (overrides.search !== undefined ? overrides.search : search) || undefined,
+      page: overrides.page,
+    }, { preserveState: true, preserveScroll: true });
+  };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    applyCatalogFilters({ search, page: 1 });
+  };
+
+  const filteredEvents = eventList;
 
   return (
     <AppLayout title="Katalog BIMTEK">
@@ -190,22 +203,65 @@ export default function Index({ events, registeredEventIds = [] }) {
           )}
         </div>
 
-        {/* SEARCH BAR */}
-        <div className="relative">
-          <Search className="w-4 h-4 text-slate-400 absolute left-4 top-3.5" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Cari tema atau lokasi BIMTEK..."
-            aria-label="Cari tema atau lokasi BIMTEK"
-            className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-xs font-medium text-slate-900 focus:ring-2 focus:ring-blue-900 focus:border-blue-900 shadow-xs outline-none transition-all"
-          />
+        {/* SCOPE TABS + SEARCH */}
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center gap-2 p-1 bg-slate-100 rounded-xl w-full sm:w-auto">
+            {[
+              { id: 'active', label: 'Aktif', count: counts.active },
+              { id: 'archive', label: 'Arsip', count: counts.archive },
+              { id: 'all', label: 'Semua', count: counts.all },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => applyCatalogFilters({ scope: tab.id, page: 1 })}
+                className={`flex-1 sm:flex-initial px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                  scope === tab.id ? 'bg-blue-900 text-white shadow-xs' : 'text-slate-600 hover:text-blue-900'
+                }`}
+              >
+                {tab.label}
+                {typeof tab.count === 'number' && (
+                  <span className={`ml-1.5 font-mono ${scope === tab.id ? 'text-amber-300' : 'text-slate-400'}`}>
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+
+          <form onSubmit={handleSearchSubmit} className="relative">
+            <Search className="w-4 h-4 text-slate-400 absolute left-4 top-3.5" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Cari tema atau lokasi BIMTEK..."
+              aria-label="Cari tema atau lokasi BIMTEK"
+              className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-xs font-medium text-slate-900 focus:ring-2 focus:ring-blue-900 focus:border-blue-900 shadow-xs outline-none transition-all"
+            />
+          </form>
         </div>
 
         {/* EVENT CARDS GRID */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {filteredEvents.map((item) => (
+          {filteredEvents.length === 0 ? (
+            <div className="md:col-span-2 bg-white border border-slate-200 rounded-3xl p-10 text-center">
+              <p className="text-sm font-bold text-slate-700">
+                Tidak ada kegiatan pada filter &quot;{scope === 'active' ? 'Aktif' : scope === 'archive' ? 'Arsip' : 'Semua'}&quot;
+                {search ? ` untuk pencarian "${search}"` : ''}.
+              </p>
+              {scope !== 'all' && (
+                <button
+                  type="button"
+                  onClick={() => applyCatalogFilters({ scope: 'all', page: 1 })}
+                  className="mt-3 text-xs font-bold text-blue-900 underline"
+                >
+                  Lihat semua kegiatan
+                </button>
+              )}
+            </div>
+          ) : (
+            filteredEvents.map((item) => (
             <div key={item.id} className="bg-white border border-slate-200 rounded-3xl p-6 flex flex-col justify-between space-y-4 shadow-xs hover:border-blue-900/40 hover:shadow-md transition-all">
               <div>
                 {/* CARD HEADER */}
@@ -404,8 +460,37 @@ export default function Index({ events, registeredEventIds = [] }) {
               </div>
 
             </div>
-          ))}
+          ))
+          )}
         </div>
+
+        {/* PAGINATION */}
+        {events?.links && events.last_page > 1 && (
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {events.links.map((link, idx) => (
+              <button
+                key={idx}
+                type="button"
+                disabled={!link.url}
+                onClick={() => {
+                  if (!link.url) return;
+                  const url = new URL(link.url, window.location.origin);
+                  applyCatalogFilters({
+                    page: url.searchParams.get('page') || 1,
+                  });
+                }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  link.active
+                    ? 'bg-blue-900 text-white'
+                    : link.url
+                      ? 'bg-white border border-slate-200 text-slate-700 hover:border-blue-900'
+                      : 'bg-slate-50 text-slate-300 cursor-not-allowed'
+                }`}
+                dangerouslySetInnerHTML={{ __html: link.label }}
+              />
+            ))}
+          </div>
+        )}
 
         {/* MODAL CREATE / EDIT EVENT */}
         {showModal && (

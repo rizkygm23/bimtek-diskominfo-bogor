@@ -94,6 +94,7 @@ class ProfileController extends Controller
 
         if ($user->role === 'pembicara') {
             $profile = SpeakerProfile::firstOrCreate(['user_id' => $user->id]);
+            $wasNeedsFix = $profile->verification_status === 'perlu_perbaikan';
             $profile->update([
                 'nip_nik' => $validated['nik'] ?? $profile->nip_nik,
                 'npwp' => $validated['npwp'] ?? $profile->npwp,
@@ -106,8 +107,18 @@ class ProfileController extends Controller
                 'foto_ktp_path' => $ktpPath ?? $profile->foto_ktp_path,
                 'foto_npwp_path' => $npwpPath ?? $profile->foto_npwp_path,
             ]);
+            // Setelah user perbaiki berkas, antre ulang ke admin
+            if ($wasNeedsFix || $ktpPath || $npwpPath) {
+                $profile->update([
+                    'verification_status' => 'belum_diverifikasi',
+                    'verification_notes' => $wasNeedsFix
+                        ? 'Berkas diperbarui pengguna — menunggu review ulang admin.'
+                        : $profile->verification_notes,
+                ]);
+            }
         } else {
             $profile = ParticipantProfile::firstOrCreate(['user_id' => $user->id]);
+            $wasNeedsFix = $profile->verification_status === 'perlu_perbaikan';
             $profile->update([
                 'nik' => $validated['nik'] ?? $profile->nik,
                 'npwp' => $validated['npwp'] ?? $profile->npwp,
@@ -119,6 +130,14 @@ class ProfileController extends Controller
                 'foto_ktp_path' => $ktpPath ?? $profile->foto_ktp_path,
                 'foto_npwp_path' => $npwpPath ?? $profile->foto_npwp_path,
             ]);
+            if ($wasNeedsFix || $ktpPath || $npwpPath) {
+                $profile->update([
+                    'verification_status' => 'belum_diverifikasi',
+                    'verification_notes' => $wasNeedsFix
+                        ? 'Berkas diperbarui pengguna — menunggu review ulang admin.'
+                        : $profile->verification_notes,
+                ]);
+            }
         }
 
         return back()->with('success', 'Profil dan data administrasi Anda berhasil diperbarui!');

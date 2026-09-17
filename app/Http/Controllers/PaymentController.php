@@ -14,6 +14,56 @@ use App\Models\ActivityLog;
 
 class PaymentController extends Controller
 {
+    /**
+     * Slim recipient payload for searchable select (avoids shipping full User models).
+     */
+    private function mapRecipient(User $user): array
+    {
+        $golongan = $user->speakerProfileDetail?->golongan
+            ?? $user->speakerProfile?->golongan
+            ?? null;
+
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'nip_nik' => $user->nip_nik,
+            'instansi' => $user->instansi
+                ?? $user->participantProfile?->instansi
+                ?? $user->speakerProfileDetail?->instansi
+                ?? null,
+            'golongan' => $golongan,
+            'speaker_profile_detail' => $golongan ? ['golongan' => $golongan] : null,
+        ];
+    }
+
+    private function recipientsQuery(string $type, $eventId = null)
+    {
+        if ($type === 'pembicara') {
+            $query = User::query()
+                ->where('role', 'pembicara')
+                ->with(['speakerProfileDetail:id,user_id,golongan,instansi']);
+
+            if ($eventId) {
+                $query->whereHas('speakerProfile.eventAssignments', function ($q) use ($eventId) {
+                    $q->where('bimtek_event_id', $eventId);
+                });
+            }
+        } else {
+            $query = User::query()
+                ->where('role', 'user')
+                ->with(['participantProfile:id,user_id,instansi']);
+
+            if ($eventId) {
+                $query->whereHas('registrations', function ($q) use ($eventId) {
+                    $q->where('bimtek_event_id', $eventId);
+                });
+            }
+        }
+
+        return $query->orderBy('name');
+    }
+
     public function index(Request $request)
     {
         $type = $request->query('type', 'pembicara'); // 'pembicara' or 'peserta'
@@ -38,16 +88,12 @@ class PaymentController extends Controller
         $payments = $query->latest()->paginate(15)->withQueryString();
         $taxParameters = TaxParameter::all();
 
-        // Get users list for select dropdown
-        if ($type === 'pembicara') {
-            $recipients = User::where('role', 'pembicara')
-                ->with('speakerProfileDetail')
-                ->get();
-        } else {
-            $recipients = User::where('role', 'user')
-                ->with('participantProfile')
-                ->get();
-        }
+        // Initial list (capped) — full search via searchRecipients endpoint
+        $recipients = $this->recipientsQuery($type, $eventId)
+            ->limit(80)
+            ->get()
+            ->map(fn (User $u) => $this->mapRecipient($u))
+            ->values();
 
         return Inertia::render('Admin/Payments/Index', [
             'payments' => $payments,
@@ -59,6 +105,31 @@ class PaymentController extends Controller
                 'event_id' => $eventId,
             ],
         ]);
+    }
+
+    /**
+     * Async searchable recipients for payment modal (scales past thousands of users).
+     */
+    public function searchRecipients(Request $request)
+    {
+        $type = $request->query('type', 'pembicara');
+        $eventId = $request->query('event_id');
+        $q = trim((string) $request->query('q', ''));
+
+        $query = $this->recipientsQuery($type, $eventId ?: null);
+
+        if ($q !== '') {
+            $query->where(function ($inner) use ($q) {
+                $inner->where('name', 'like', "%{$q}%")
+                    ->orWhere('email', 'like', "%{$q}%")
+                    ->orWhere('nip_nik', 'like', "%{$q}%")
+                    ->orWhere('instansi', 'like', "%{$q}%");
+            });
+        }
+
+        $recipients = $query->limit(40)->get()->map(fn (User $u) => $this->mapRecipient($u))->values();
+
+        return response()->json(['recipients' => $recipients]);
     }
 
     public function store(Request $request)

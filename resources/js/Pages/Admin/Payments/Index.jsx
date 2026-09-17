@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Head, useForm, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import PageHeader from '@/Components/PageHeader';
 import SearchableEventSelect from '@/Components/SearchableEventSelect';
+import SearchableRecipientSelect from '@/Components/SearchableRecipientSelect';
 import {
   CreditCard,
   Plus,
@@ -21,6 +22,11 @@ export default function PaymentIndex({ payments, events, recipients, taxParamete
   const [type, setType] = useState(filters.type || 'pembicara');
   const [eventId, setEventId] = useState(filters.event_id || '');
   const [modalOpen, setModalOpen] = useState(false);
+  const [localRecipients, setLocalRecipients] = useState(recipients || []);
+
+  useEffect(() => {
+    setLocalRecipients(recipients || []);
+  }, [recipients]);
 
   const { data, setData, post, processing, errors, reset } = useForm({
     event_id: events[0]?.id || '',
@@ -39,28 +45,25 @@ export default function PaymentIndex({ payments, events, recipients, taxParamete
     setEventId(newEventId);
     router.get('/admin/payments', {
       type: newType,
-      event_id: newEventId,
+      event_id: newEventId || undefined,
     }, { preserveState: true });
   };
 
-  const handleRecipientChange = (userId) => {
-    setData('user_id', userId);
-    const selectedUser = recipients.find(r => r.id === parseInt(userId));
-    
-    // Auto calculate tax rate based on recipient NPWP or Golongan if speaker
-    if (selectedUser) {
-      if (type === 'pembicara') {
-        const gol = selectedUser.speakerProfileDetail?.golongan || '';
-        if (gol.includes('IV')) {
-          setData('tax_rate_percent', 15);
-        } else if (gol.includes('III')) {
-          setData('tax_rate_percent', 5);
-        } else {
-          setData('tax_rate_percent', 2.5);
-        }
-      } else {
-        setData('tax_rate_percent', 0); // Participants transport generally no tax
-      }
+  const handleRecipientChange = (userId, pool = localRecipients) => {
+    const selectedUser = pool.find((r) => String(r.id) === String(userId));
+    let tax = type === 'peserta' ? 0 : 2.5;
+    if (selectedUser && type === 'pembicara') {
+      const gol = selectedUser.golongan || selectedUser.speaker_profile_detail?.golongan || '';
+      if (String(gol).includes('IV')) tax = 15;
+      else if (String(gol).includes('III')) tax = 5;
+    }
+    setData({
+      ...data,
+      user_id: userId,
+      tax_rate_percent: tax,
+    });
+    if (selectedUser && !localRecipients.some((r) => String(r.id) === String(userId))) {
+      setLocalRecipients((prev) => [...prev, selectedUser]);
     }
   };
 
@@ -282,7 +285,7 @@ export default function PaymentIndex({ payments, events, recipients, taxParamete
                   <SearchableEventSelect
                     events={events}
                     value={data.event_id}
-                    onChange={(id) => setData('event_id', id)}
+                    onChange={(id) => setData({ ...data, event_id: id, user_id: '' })}
                     required
                     placeholder="Cari / pilih kegiatan BIMTEK..."
                   />
@@ -291,17 +294,22 @@ export default function PaymentIndex({ payments, events, recipients, taxParamete
                 {/* SELECT RECIPIENT */}
                 <div>
                   <label className="font-bold text-slate-900 block mb-1">Penerima ({type === 'pembicara' ? 'Narasumber' : 'Peserta'}):</label>
-                  <select
+                  <SearchableRecipientSelect
+                    recipients={localRecipients}
                     value={data.user_id}
-                    onChange={(e) => handleRecipientChange(e.target.value)}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-blue-900"
+                    onChange={(id, rec) => {
+                      if (rec && !localRecipients.some((r) => String(r.id) === String(rec.id))) {
+                        setLocalRecipients((prev) => [...prev, rec]);
+                      }
+                      handleRecipientChange(id, rec ? [...localRecipients, rec] : localRecipients);
+                    }}
+                    searchUrl="/admin/payments/recipients"
+                    type={type}
+                    eventId={data.event_id}
                     required
-                  >
-                    <option value="">-- Pilih Penerima --</option>
-                    {recipients.map((rec) => (
-                      <option key={rec.id} value={rec.id}>{rec.name} ({rec.instansi || rec.nip_nik})</option>
-                    ))}
-                  </select>
+                    placeholder="Cari nama, NIP/NIK, atau instansi..."
+                  />
+                  {errors.user_id && <p className="text-xs text-rose-600 font-bold mt-1">{errors.user_id}</p>}
                 </div>
 
                 {/* COMPONENT TYPE & VOLUME */}

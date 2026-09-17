@@ -1,24 +1,5 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Search, ChevronDown, CheckCircle2, X, Calendar } from 'lucide-react';
-
-function formatEventDate(dateStr) {
-  if (!dateStr) return null;
-  try {
-    return new Date(dateStr).toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    });
-  } catch {
-    return null;
-  }
-}
-
-function eventLabel(ev) {
-  if (!ev) return '';
-  const date = formatEventDate(ev.start_date);
-  return date ? `${ev.title} · ${date}` : ev.title;
-}
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import { Search, ChevronDown, CheckCircle2, X, User } from 'lucide-react';
 
 function useIsMobile(breakpoint = 640) {
   const [isMobile, setIsMobile] = useState(() =>
@@ -37,34 +18,41 @@ function useIsMobile(breakpoint = 640) {
 }
 
 /**
- * Searchable dropdown for BIMTEK events.
+ * Searchable dropdown for payment recipients.
  * Mobile: bottom sheet. Desktop: anchored dropdown.
  */
-export default function SearchableEventSelect({
-  events = [],
+export default function SearchableRecipientSelect({
+  recipients = [],
   value,
   onChange,
-  allowEmpty = false,
-  emptyLabel = 'Semua Kegiatan BIMTEK',
-  placeholder = 'Pilih / cari kegiatan BIMTEK...',
+  searchUrl = null,
+  type = 'pembicara',
+  eventId = '',
+  placeholder = 'Pilih / cari penerima...',
   required = false,
   className = '',
   disabled = false,
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [remoteResults, setRemoteResults] = useState(null);
+  const [loading, setLoading] = useState(false);
   const dropdownRef = useRef(null);
   const searchInputRef = useRef(null);
+  const debounceRef = useRef(null);
   const isMobile = useIsMobile();
 
-  const selected = useMemo(
-    () => events.find((ev) => String(ev.id) === String(value)) || null,
-    [events, value]
-  );
+  const selected = useMemo(() => {
+    const pool = remoteResults || recipients;
+    return pool.find((r) => String(r.id) === String(value))
+      || recipients.find((r) => String(r.id) === String(value))
+      || null;
+  }, [recipients, remoteResults, value]);
 
   const close = () => {
     setIsOpen(false);
     setSearchTerm('');
+    setRemoteResults(null);
   };
 
   useEffect(() => {
@@ -106,43 +94,82 @@ export default function SearchableEventSelect({
     return () => document.removeEventListener('keydown', onKey);
   }, [isOpen]);
 
+  const fetchRemote = useCallback(
+    (q) => {
+      if (!searchUrl) return;
+      setLoading(true);
+      const params = new URLSearchParams({
+        type,
+        q: q || '',
+      });
+      if (eventId) params.set('event_id', eventId);
+
+      fetch(`${searchUrl}?${params.toString()}`, {
+        headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        credentials: 'same-origin',
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          setRemoteResults(Array.isArray(data.recipients) ? data.recipients : []);
+        })
+        .catch(() => setRemoteResults([]))
+        .finally(() => setLoading(false));
+    },
+    [searchUrl, type, eventId]
+  );
+
+  useEffect(() => {
+    if (!isOpen || !searchUrl) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      fetchRemote(searchTerm.trim());
+    }, 280);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [searchTerm, isOpen, searchUrl, fetchRemote]);
+
+  useEffect(() => {
+    if (isOpen && searchUrl) fetchRemote(searchTerm.trim());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eventId]);
+
   const filtered = useMemo(() => {
+    if (searchUrl && remoteResults !== null) return remoteResults;
     const q = searchTerm.toLowerCase().trim();
-    if (!q) return events;
-    return events.filter((ev) => {
-      const hay = [
-        ev.title,
-        ev.location,
-        ev.status,
-        formatEventDate(ev.start_date),
-        String(ev.id),
-      ]
+    if (!q) return recipients;
+    return recipients.filter((r) => {
+      const hay = [r.name, r.instansi, r.nip_nik, r.email, r.golongan]
         .filter(Boolean)
         .join(' ')
         .toLowerCase();
       return hay.includes(q);
     });
-  }, [events, searchTerm]);
+  }, [recipients, remoteResults, searchTerm, searchUrl]);
 
-  const handleSelect = (id) => {
-    onChange(id === '' || id === null || id === undefined ? '' : String(id));
+  const handleSelect = (recOrId) => {
+    if (recOrId === '' || recOrId == null) {
+      onChange('', null);
+    } else if (typeof recOrId === 'object') {
+      onChange(String(recOrId.id), recOrId);
+    } else {
+      const found = filtered.find((r) => String(r.id) === String(recOrId))
+        || recipients.find((r) => String(r.id) === String(recOrId));
+      onChange(String(recOrId), found || null);
+    }
     close();
   };
 
   const displayText = selected
-    ? eventLabel(selected)
-    : allowEmpty && (value === '' || value === null || value === undefined)
-      ? emptyLabel
-      : null;
-
-  const canClear = allowEmpty && !required && value !== '' && value !== null && value !== undefined;
+    ? `${selected.name}${selected.instansi ? ` · ${selected.instansi}` : ''}`
+    : null;
 
   const panelContent = (
     <>
       <div className="p-3 sm:p-2.5 bg-slate-50/95 border-b border-slate-100 shrink-0">
         {isMobile && (
           <div className="flex items-center justify-between mb-2.5">
-            <span className="text-sm font-extrabold text-slate-900">Pilih Kegiatan BIMTEK</span>
+            <span className="text-sm font-extrabold text-slate-900">Pilih Penerima</span>
             <button
               type="button"
               onClick={close}
@@ -163,7 +190,7 @@ export default function SearchableEventSelect({
             autoComplete="off"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Ketik judul, lokasi, atau tahun..."
+            placeholder="Ketik nama, NIP/NIK, atau instansi..."
             className="w-full pl-10 sm:pl-8.5 pr-10 py-3 sm:py-2 bg-white border border-slate-200 rounded-xl text-base sm:text-xs font-semibold text-slate-900 placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:border-blue-900 focus:ring-1 focus:ring-blue-900"
           />
           {searchTerm && (
@@ -177,41 +204,33 @@ export default function SearchableEventSelect({
           )}
         </div>
         <div className="mt-2 px-0.5 flex items-center justify-between text-[11px] sm:text-[10px] text-slate-400 font-medium">
-          <span>
-            {filtered.length} kegiatan
-            {searchTerm ? ' cocok' : ''}
-          </span>
-          <span className="text-blue-900/60 hidden xs:inline sm:inline">Ketuk untuk memilih</span>
+          <span>{loading ? 'Mencari...' : `${filtered.length} penerima`}</span>
+          <span className="text-blue-900/60 hidden sm:inline">Ketuk untuk memilih</span>
         </div>
       </div>
 
       <div className="overflow-y-auto overscroll-contain divide-y divide-slate-50 py-1 flex-1 min-h-0 max-h-[min(55vh,22rem)] sm:max-h-60">
-        {allowEmpty && !searchTerm && (
-          <button
-            type="button"
-            onClick={() => handleSelect('')}
-            className={`w-full text-left px-4 sm:px-3.5 py-3.5 sm:py-2.5 text-sm sm:text-xs transition-colors cursor-pointer flex items-center justify-between gap-2 min-h-[48px] sm:min-h-0
-              ${!selected && (value === '' || value === null || value === undefined)
-                ? 'bg-blue-50/80 text-blue-950 font-bold border-l-4 border-blue-900'
-                : 'text-slate-600 hover:bg-slate-50 font-medium italic'
-              }`}
-          >
-            <span>{emptyLabel}</span>
-            {!selected && (value === '' || value === null || value === undefined) && (
-              <CheckCircle2 className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-blue-900 shrink-0" />
-            )}
-          </button>
-        )}
-
-        {filtered.length > 0 ? (
-          filtered.map((ev) => {
-            const isSelected = String(value) === String(ev.id);
-            const date = formatEventDate(ev.start_date);
+        {!loading && filtered.length === 0 ? (
+          <div className="p-8 sm:p-6 text-center">
+            <p className="text-sm sm:text-xs text-slate-500 font-medium">
+              Penerima tidak ditemukan
+              {searchTerm ? (
+                <>
+                  {' '}
+                  untuk &quot;<span className="font-bold text-slate-800">{searchTerm}</span>&quot;
+                </>
+              ) : null}
+              .
+            </p>
+          </div>
+        ) : (
+          filtered.map((rec) => {
+            const isSelected = String(value) === String(rec.id);
             return (
               <button
-                key={ev.id}
+                key={rec.id}
                 type="button"
-                onClick={() => handleSelect(ev.id)}
+                onClick={() => handleSelect(isSelected && !required ? '' : rec)}
                 className={`w-full text-left px-4 sm:px-3.5 py-3.5 sm:py-2.5 text-sm sm:text-xs transition-colors cursor-pointer flex items-center justify-between gap-2 min-h-[52px] sm:min-h-0
                   ${isSelected
                     ? 'bg-blue-50/80 text-blue-950 font-bold border-l-4 border-blue-900'
@@ -219,20 +238,10 @@ export default function SearchableEventSelect({
                   }`}
               >
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate leading-snug">{ev.title}</span>
-                  {(date || ev.status) && (
-                    <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] sm:text-[10px] font-normal text-slate-400">
-                      {date && (
-                        <span className="inline-flex items-center gap-0.5">
-                          <Calendar className="w-3 h-3 sm:w-2.5 sm:h-2.5" />
-                          {date}
-                        </span>
-                      )}
-                      {ev.status && (
-                        <span className="uppercase tracking-wide">{ev.status}</span>
-                      )}
-                    </span>
-                  )}
+                  <span className="block truncate leading-snug">{rec.name}</span>
+                  <span className="mt-1 block text-[11px] sm:text-[10px] font-normal text-slate-400 truncate">
+                    {[rec.nip_nik, rec.instansi, rec.golongan].filter(Boolean).join(' · ') || '—'}
+                  </span>
                 </span>
                 {isSelected && (
                   <CheckCircle2 className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-blue-900 shrink-0" />
@@ -240,12 +249,6 @@ export default function SearchableEventSelect({
               </button>
             );
           })
-        ) : (
-          <div className="p-8 sm:p-6 text-center">
-            <p className="text-sm sm:text-xs text-slate-500 font-medium">
-              Kegiatan &quot;<span className="font-bold text-slate-800">{searchTerm}</span>&quot; tidak ditemukan.
-            </p>
-          </div>
         )}
       </div>
     </>
@@ -261,11 +264,12 @@ export default function SearchableEventSelect({
           ${isOpen ? 'border-blue-900 ring-2 ring-blue-900/10 bg-white' : 'border-slate-300 hover:border-slate-400'}
           ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
       >
-        <span className={`truncate min-w-0 ${!displayText ? 'text-slate-400 font-normal' : 'text-slate-900'}`}>
-          {displayText || placeholder}
+        <span className={`truncate min-w-0 flex items-center gap-1.5 ${!displayText ? 'text-slate-400 font-normal' : 'text-slate-900'}`}>
+          {!displayText && <User className="w-4 h-4 sm:w-3.5 sm:h-3.5 shrink-0 text-slate-400" />}
+          <span className="truncate">{displayText || placeholder}</span>
         </span>
         <div className="flex items-center gap-1 shrink-0">
-          {canClear && (
+          {value && !required && (
             <span
               role="button"
               tabIndex={0}
@@ -279,8 +283,8 @@ export default function SearchableEventSelect({
                   handleSelect('');
                 }
               }}
-              className="p-1.5 sm:p-0.5 hover:bg-slate-200 rounded-full text-slate-400 hover:text-slate-600 transition-colors"
-              title="Hapus filter"
+              className="p-1.5 sm:p-0.5 hover:bg-slate-200 rounded-full text-slate-400 hover:text-slate-600"
+              title="Hapus pilihan"
             >
               <X className="w-4 h-4 sm:w-3 sm:h-3" />
             </span>
@@ -291,7 +295,6 @@ export default function SearchableEventSelect({
         </div>
       </button>
 
-      {/* Mobile: bottom sheet */}
       {isOpen && isMobile && (
         <div className="fixed inset-0 z-[100] flex flex-col justify-end">
           <button
@@ -300,7 +303,7 @@ export default function SearchableEventSelect({
             aria-label="Tutup overlay"
             onClick={close}
           />
-          <div className="relative z-10 flex flex-col w-full max-h-[85vh] bg-white rounded-t-3xl border border-slate-200 shadow-2xl overflow-hidden safe-area-pb">
+          <div className="relative z-10 flex flex-col w-full max-h-[85vh] bg-white rounded-t-3xl border border-slate-200 shadow-2xl overflow-hidden">
             <div className="flex justify-center pt-2 pb-1">
               <span className="w-10 h-1 rounded-full bg-slate-300" />
             </div>
@@ -309,7 +312,6 @@ export default function SearchableEventSelect({
         </div>
       )}
 
-      {/* Desktop: anchored panel */}
       {isOpen && !isMobile && (
         <div className="absolute z-50 mt-1 left-0 right-0 w-full max-w-full bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
           {panelContent}
