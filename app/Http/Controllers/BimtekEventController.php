@@ -15,13 +15,24 @@ class BimtekEventController extends Controller
 {
     public function publicLanding()
     {
-        $events = BimtekEvent::withCount('registrations')
-            ->orderBy('start_date', 'desc')
-            ->take(6)
+        // User yang sudah login tidak butuh landing — langsung ke dashboardnya.
+        if (auth()->check()) {
+            return redirect()->route('dashboard');
+        }
+
+        // Jadwal BIMTEK mendatang untuk section "Jadwal" (urut tanggal terdekat).
+        $schedules = BimtekEvent::withCount('registrations')
+            ->whereIn('status', ['open', 'ongoing'])
+            ->where(function ($q) {
+                $q->whereNull('end_date')
+                    ->orWhere('end_date', '>=', now());
+            })
+            ->orderBy('start_date', 'asc')
+            ->take(8)
             ->get();
 
         return Inertia::render('Landing', [
-            'events' => $events,
+            'schedules' => $schedules,
         ]);
     }
 
